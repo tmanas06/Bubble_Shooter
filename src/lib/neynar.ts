@@ -74,3 +74,8 @@ export async function sendNeynarMiniAppNotification({
     return { state: "error", error };
   }
 } 
+
+export async function publishCast(signerUuid: string, text: string) {
+  const client = getNeynarClient();
+  return await client.publishCast({ signerUuid, text });
+}
