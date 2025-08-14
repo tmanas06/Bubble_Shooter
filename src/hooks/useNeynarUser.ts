@@ -4,6 +4,7 @@ export interface NeynarUser {
   fid: number;
   score: number;
   username: string;
+  signerUuid: string;
 }
 
 export function useNeynarUser(context?: { user?: { fid?: number } }) {

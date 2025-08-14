@@ -31,7 +31,7 @@ export default function Select() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#0B3E84]">
       <div className="w-[390px] h-[844px] relative overflow-hidden rounded-3xl shadow-2xl">
-        <Image src="/assests/backgrounds/every.png" alt="bg" fill className="object-cover" />
+        <Image src="/assets/backgrounds/every.png" alt="bg" fill className="object-cover" />
         <div className="absolute inset-0 p-6 flex flex-col gap-4">
           <div className="mx-auto mt-4 text-white text-xl font-semibold">Choose a creator</div>
           <div className="grid grid-cols-2 gap-4 mt-2">

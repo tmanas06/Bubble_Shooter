@@ -18,11 +18,13 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-screen bg-[#0B3E84] relative">
+      <body className="min-h-screen relative">
         <ClientBackground />
-        <Providers session={session}>
-          {children}
-        </Providers>
+        <div className="relative z-10">
+          <Providers session={session}>
+            {children}
+          </Providers>
+        </div>
       </body>
     </html>
   );
