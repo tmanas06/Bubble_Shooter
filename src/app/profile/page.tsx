@@ -36,27 +36,24 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="relative w-full h-screen bg-[#0B3E84] overflow-hidden">
-      {/* Background Bubbles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Large Bubbles */}
-        <div className="absolute w-[95px] h-[95px] left-[228px] top-[-1px] transform rotate-[21.3deg]">
-          <div className="w-full h-full rounded-full bg-white/10"></div>
-        </div>
-        <div className="absolute w-[95px] h-[95px] left-[284px] top-[187px] transform rotate-[21.3deg]">
-          <div className="w-full h-full rounded-full bg-white/10"></div>
-        </div>
-        <div className="absolute w-[95px] h-[95px] left-[62px] top-[145px] transform rotate-[21.3deg]">
-          <div className="w-full h-full rounded-full bg-white/10"></div>
-        </div>
+    <div className="relative w-full h-screen overflow-hidden">
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(94.6%_54.54%_at_50%_50%,#35A5F7_0%,#152E92_100%)]">
+        {/* Bubble effects matching homepage */}
+        <div className="absolute w-[406px] h-[406px] left-[-224px] top-[-159px] bg-gradient-to-b from-[#226ED8] to-[rgba(35,136,242,0)] opacity-70 rounded-full blur-[2.9px]"></div>
+        <div className="absolute w-[100px] h-[100px] left-[334px] top-[119px] bg-gradient-to-b from-[rgba(44,155,244,0.28)] to-[rgba(48,158,245,0.098)] backdrop-blur-[13.1px] rounded-full"></div>
+        <div className="absolute w-[100px] h-[100px] left-[-21px] top-[580px] bg-gradient-to-b from-[rgba(44,155,244,0.28)] to-[rgba(48,158,245,0.098)] backdrop-blur-[13.1px] rounded-full"></div>
       </div>
 
+      {/* Main container */}
+      <div className="absolute w-[419px] h-[892px] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2">
+
       {/* Header */}
-      <div className="relative z-10 pt-6 px-6">
+      <div className="relative z-20 pt-6 px-6">
         <div className="flex justify-between items-center">
           <button 
             onClick={() => router.back()} 
-            className="text-white text-lg font-medium"
+            className="text-white text-2xl font-bold"
           >
             ← Back
           </button>
@@ -67,6 +64,9 @@ export default function ProfilePage() {
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 rounded-full hover:bg-white/20 transition-colors"
               aria-label="Menu"
+              style={{
+                backgroundColor: menuOpen ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
+              }}
             >
               <div className="w-6 h-6 flex flex-col items-center justify-center">
                 <div className={`w-5 h-0.5 bg-white rounded-full transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1.5'}`}></div>
@@ -100,10 +100,10 @@ export default function ProfilePage() {
       {/* Profile Content */}
       <div className="relative z-10 h-full flex flex-col items-center px-6 pt-8">
         {/* Profile Picture */}
-        <div className="w-32 h-32 rounded-full bg-white/10 border-4 border-white/20 mb-6 overflow-hidden">
-          {user?.pfp_url ? (
+        <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-white/30 mb-6 overflow-hidden shadow-lg">
+          {user?.pfpUrl ? (
             <img 
-              src={user.pfp_url} 
+              src={user.pfpUrl} 
               alt={user.displayName || 'Profile'} 
               className="w-full h-full object-cover"
             />
@@ -116,14 +116,14 @@ export default function ProfilePage() {
         
         {/* User Info */}
         <h1 className="text-2xl font-bold text-white mb-1">
-          {user?.display_name || 'Guest'}
+          {user?.displayName || 'Guest'}
         </h1>
         <p className="text-white/70 mb-8">
           @{user?.username || 'anonymous'}
         </p>
         
         {/* Stats */}
-        <div className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8">
+        <div className="w-full bg-white/20 backdrop-blur-md rounded-3xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-6">Your Stats</h2>
           
           <div className="grid grid-cols-2 gap-4">
@@ -147,7 +147,7 @@ export default function ProfilePage() {
         </div>
         
         {/* Game Settings */}
-        <div className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8">
+        <div className="w-full bg-white/20 backdrop-blur-md rounded-3xl p-6 mb-6">
           <h2 className="text-xl font-bold text-white mb-4">Game Settings</h2>
           
           <div className="space-y-4">
@@ -180,10 +180,11 @@ export default function ProfilePage() {
         {/* Sign Out Button */}
         <button
           onClick={handleSignOut}
-          className="mt-auto mb-8 w-full max-w-md py-3 bg-red-600/90 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+          className="mt-auto mb-8 w-full py-4 bg-red-600/90 hover:bg-red-700 text-white font-medium rounded-xl transition-colors shadow-lg"
         >
           Sign Out
         </button>
+      </div>
       </div>
     </div>
   );
