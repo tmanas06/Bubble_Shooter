@@ -9,7 +9,6 @@ export default function HomePageClient() {
     // Initialize Farcaster SDK and hide splash screen when component mounts
     const initializeSdk = async () => {
       try {
-        // Wait for the SDK to be fully loaded
         await sdk.actions.ready();
         console.log('Farcaster SDK ready');
       } catch (error) {

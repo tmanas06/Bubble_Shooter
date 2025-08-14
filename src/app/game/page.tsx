@@ -1,18 +1,9 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-
-const GameCanvas = dynamic(() => import('@/components/GameCanvas'), { 
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-white">Loading game...</div>
-    </div>
-  )
-});
+import GameCanvas from '@/components/GameCanvas';
 
 interface GameOverParams {
   score: number;
