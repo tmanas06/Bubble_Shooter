@@ -74,17 +74,22 @@ export default function GamePage() {
   const gameCreator = creator || 'default';
 
   return (
-    <div className="gameWrapperDiv">
-
-      <div className="gameCanvasContainer">
-        {creator && (
-          <GameCanvas
-            chosenCreator={creator}
-            onGameOver={onGameOver}
-            // onScoreUpdate={onScoreUpdate}
-          />
-        )}
-      </div>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      overflow: 'hidden',
+      backgroundColor: '#000000'
+    }}>
+      {creator && (
+        <GameCanvas
+          chosenCreator={creator}
+          onGameOver={onGameOver}
+          // onScoreUpdate={onScoreUpdate}
+        />
+      )}
 
       {showScore && gameOver && (
         <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4">

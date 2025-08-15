@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useNeynarUser } from '@/hooks/useNeynarUser';
 import { useEffect, useRef, useState } from 'react';
-import { BackgroundBubbles } from '@/components/BottomBubbles';
 
 export default function HomePage() {
   const router = useRouter();
@@ -37,7 +36,7 @@ export default function HomePage() {
   return (
     <div className="relative w-full h-screen overflow-hidden">
       {/* Main container with exact dimensions */}
-      <div className="absolute w-[100vw] h-[100vh] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2 flex flex-col items-center justify-center">
+      <div className="absolute w-[419px] h-[892px] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(94.6%_54.54%_at_50%_50%,#35A5F7_0%,#152E92_100%)]">
           {/* White panel */}
@@ -112,8 +111,48 @@ export default function HomePage() {
           </div>
           
           {/* Bottom large bubble */}
-          <div className="absolute w-[100vw] h-[95vh]  bg-gradient-to-b from-[#226ED8] to-[rgba(35,136,242,0)]  blur-[1px]">
-           <BackgroundBubbles/>
+          <div className="absolute w-[406px] h-[406px] left-[17px] top-[713px] bg-gradient-to-b from-[#226ED8] to-[rgba(35,136,242,0)] rounded-full blur-[2.9px]">
+            
+            {/* Bubble Group 36 */}
+            <div className="absolute w-[79px] h-[80.81px] left-[-6px] top-[61px] transform rotate-[-29.11deg]">
+              <img src="/assets/bubbles/bubble1.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Bubble Group 40 */}
+            <div className="absolute w-[79px] h-[80.81px] left-[316px] top-[69px] transform rotate-[13.04deg]">
+              <img src="/assets/bubbles/bubble2.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Bubble Group 41 */}
+            <div className="absolute w-[79px] h-[80.81px] left-[204.27px] top-[-0.56px] transform rotate-[84.67deg]">
+              <img src="/assets/bubbles/bubble3.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Bubble Group 38 */}
+            <div className="absolute w-[79px] h-[78.4px] left-[242px] top-[84px]">
+              <img src="/assets/bubbles/bubble4.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Bubble Group 43 */}
+            <div className="absolute w-[79px] h-[78.4px] left-[32px] top-[8px]">
+              <img src="/assets/bubbles/bubble1.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Bubble Group 39 */}
+            <div className="absolute w-[81px] h-[81px] left-[62px] top-[61px] transform rotate-[121.87deg]">
+              <img src="/assets/bubbles/bubble2.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Bubble Group 37 */}
+            <div className="absolute w-[95px] h-[95px] left-[130px] top-[58px] transform rotate-[21.3deg]">
+              <img src="/assets/bubbles/bubble3.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Bubble Group 42 */}
+            <div className="absolute w-[95px] h-[95px] left-[76px] top-[-15px] transform rotate-[21.3deg]">
+              <img src="/assets/bubbles/bubble4.png" alt="" className="w-full h-full object-contain" />
+            </div>
+            
           </div>
         </div>
 

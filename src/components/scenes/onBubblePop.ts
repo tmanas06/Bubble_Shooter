@@ -1,4 +1,5 @@
 import { PlayScene } from "@/lib/bubbleType";
+import { createBubbles } from "./createBubbles";
 
 export function onBubblePop(scene: PlayScene, bubble: Phaser.GameObjects.GameObject) {
   const b = bubble as any;
@@ -7,8 +8,13 @@ export function onBubblePop(scene: PlayScene, bubble: Phaser.GameObjects.GameObj
   scene.pops++;
   scene.updateScore(scene);
   
-  // Check for game over if no bubbles left
+  // Check if all bubbles are popped
   if (scene.bubbles.getLength() <= 0) {
-    scene.endGame(scene, scene.onGameOver);
+    // Instead of ending the game, create a new layer of bubbles
+    // with a small delay for better UX
+    scene.time.delayedCall(500, () => {
+      // Create a new layer of bubbles, positioned slightly lower
+      createBubbles(scene, 0);
+    });
   }
 }

@@ -69,7 +69,23 @@ export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
   }, [chosenCreator, onGameOver]);
 
   return (
-    <div ref={ref} className="w-[100vw] h-[100vh] ">
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      zIndex: 0,
+      backgroundColor: '#000000'
+    }}>
+      <div 
+        ref={ref} 
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'block'
+        }} 
+      />
     </div>
   );
 }

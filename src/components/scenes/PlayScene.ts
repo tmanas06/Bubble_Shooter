@@ -62,12 +62,87 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
       this.lastTap = 0;
       this.onGameOver = onGameOver;
 
-      addBackground(this);
-      createUI(this);
-      createGameElements(this);
-      // createAbilities(this, chosenCreator, onGameOver);
-      createBubbles(this);
-      setupInput(this, chosenCreator, onGameOver);
+      // Add debug graphics
+      const graphics = this.add.graphics();
+      graphics.fillStyle(0x00ff00, 0.5);
+      graphics.fillRect(0, 0, this.scale.width, this.scale.height);
+      
+      // Add debug text
+      const debugText = this.add.text(10, 10, 'BUBBLE SHOOTER DEBUG', { 
+        fontSize: '24px', 
+        color: '#ffffff',
+        backgroundColor: '#000000',
+        padding: { x: 10, y: 5 },
+        fontFamily: 'Arial'
+      });
+      debugText.setScrollFactor(0);
+      debugText.setDepth(1000);
+
+      // Add more debug info
+      const debugInfo = this.add.text(10, 50, '', {
+        fontSize: '16px',
+        color: '#ffffff',
+        backgroundColor: '#00000080',
+        padding: { x: 10, y: 5 },
+        fontFamily: 'Arial'
+      });
+      debugInfo.setScrollFactor(0);
+      debugInfo.setDepth(1000);
+      
+      // Update debug info every second
+      this.time.addEvent({
+        delay: 1000,
+        callback: () => {
+          if (debugInfo) {
+            debugInfo.setText([
+              `Game Time: ${Math.floor(this.time.now / 1000)}s`,
+              `Bubbles: ${this.bubbles?.getChildren().length || 0}`,
+              `Score: ${this.score}`,
+              `Screen: ${this.scale.width}x${this.scale.height}`
+            ].join('\n'));
+          }
+        },
+        callbackScope: this,
+        loop: true
+      });
+      
+      console.log('Game dimensions:', this.scale.width, 'x', this.scale.height);
+      console.log('Game camera:', this.cameras.main);
+      
+      try {
+        // Initialize game components
+        addBackground(this);
+        createUI(this);
+        createGameElements(this);
+        
+        // Create initial bubbles
+        createBubbles(this);
+        
+        // Setup input handling
+        setupInput(this, chosenCreator, onGameOver);
+        
+        // Log all game objects after creation
+        this.time.delayedCall(1000, () => {
+          console.log('Game objects after creation:');
+          console.log('Bubbles:', this.bubbles?.getChildren().length || 0);
+          console.log('All game objects:', this.children.list);
+          
+          // Add a test bubble to verify rendering
+          const testBubble = this.add.circle(100, 100, 30, 0xff0000);
+          this.tweens.add({
+            targets: testBubble,
+            x: this.scale.width - 100,
+            y: this.scale.height - 100,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1
+          });
+        });
+      } catch (error: unknown) {
+        console.error('Error in create():', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        debugInfo.setText(`ERROR: ${errorMessage}`);
+      }
     }
   }
 

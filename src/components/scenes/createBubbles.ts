@@ -1,22 +1,16 @@
 import { PlayScene } from '@/lib/bubbleType';
 
 
-export function createBubbles(scene: PlayScene) {
-  scene.bubbles = scene.physics.add.group({
-    collideWorldBounds: false,
-    allowGravity: false,
-  });
-
+function createBubbleLayer(scene: PlayScene, yOffset: number = 0) {
   const uiBarHeight = 60;          
   const topMargin = uiBarHeight + 60; 
   const sideMargin = 24;        
-
-  let bubbleSize = 80;             // big & pretty
+  const bubbleSize = 80;
   let spacingX = bubbleSize * 0.95;
   const spacingY = bubbleSize * 0.85;
 
-  const rows = 5;
-  const cols = 5;
+  const rows = 1; // Create one row at a time
+  const cols = 5; // Number of bubbles per row
 
   const availableWidth = scene.scale.width - sideMargin * 2;
   let totalWidth = (cols - 1) * spacingX + bubbleSize;
@@ -26,7 +20,7 @@ export function createBubbles(scene: PlayScene) {
   }
 
   const startX = sideMargin + (availableWidth - totalWidth) / 2;
-  const startY = topMargin;
+  const startY = topMargin + yOffset;
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
@@ -49,4 +43,34 @@ export function createBubbles(scene: PlayScene) {
       };
     }
   }
+}
+
+export function createBubbles(scene: PlayScene, yOffset: number = 0) {
+  console.log('createBubbles called with yOffset:', yOffset);
+  
+  if (!scene.bubbles) {
+    console.log('Creating new bubbles group');
+    scene.bubbles = scene.physics.add.group({
+      collideWorldBounds: false,
+      allowGravity: false,
+    });
+  }
+  
+  // Check if textures are loaded
+  const textures = ['b1', 'b2', 'b3', 'b4'];
+  const missingTextures = textures.filter(tex => !scene.textures.exists(tex));
+  
+  if (missingTextures.length > 0) {
+    console.error('Missing textures:', missingTextures);
+    return;
+  }
+  
+  console.log('All bubble textures are loaded, creating bubbles...');
+  
+  // Create initial 5 rows
+  for (let i = 0; i < 5; i++) {
+    createBubbleLayer(scene, yOffset + (i * 60));
+  }
+  
+  console.log('Bubbles created. Total bubbles:', scene.bubbles.getLength());
 }

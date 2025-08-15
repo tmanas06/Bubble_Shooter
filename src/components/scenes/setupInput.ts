@@ -57,9 +57,19 @@ export function setupInput(scene: PlayScene, chosenCreator: string, onGameOver: 
 
     // Collision with bubbles
     scene.physics.add.collider(ball, scene.bubbles, (proj, bubble) => {
-      const target = bubble as Phaser.Physics.Arcade.Image & { meta?: any };
-      const creatorHit = target.meta?.creatorName === chosenCreator;
-      const scoreIncrement = creatorHit ? 50 : target.meta?.scoreValue || 10;
+      const target = bubble as Phaser.Physics.Arcade.Image & { meta?: any; type?: string };
+      
+      // Check if it's a golden bubble (type 'b4')
+      const isGoldenBubble = target.type === 'b4';
+      
+      // Calculate score increment based on bubble type
+      let scoreIncrement = 10; // Default score
+      if (isGoldenBubble) {
+        scoreIncrement = 100; // Higher score for golden bubbles
+      } else if (target.meta) {
+        const creatorHit = target.meta.creatorName === chosenCreator;
+        scoreIncrement = creatorHit ? 50 : (target.meta.scoreValue || 10);
+      }
 
       scene.score += scoreIncrement;
       scene.pops += 1;
