@@ -62,19 +62,54 @@ class PlayScene extends Phaser.Scene {
 
   create() {
     this.physics.world.setBounds(0, 0, this.gameWidth, this.gameHeight);
-    this.bg = this.add.image(0, 0, 'game-bg')
-      .setOrigin(0, 0)
-      .setDisplaySize(this.gameWidth, this.gameHeight)
-      .setScrollFactor(0);
+    
+    // Set background color to match the app theme
+    this.cameras.main.setBackgroundColor('#0B3E84');
+    
+    // Add the game background (every.png) as the bottom layer
+    this.bg = this.add.image(
+      this.cameras.main.width / 2,  // Center X
+      this.cameras.main.height / 2, // Center Y
+      'game-bg'
+    )
+      .setOrigin(0.5)  // Center the image
+      .setDisplaySize(this.cameras.main.width, this.cameras.main.height)  // Fill the camera view
+      .setScrollFactor(0)
+      .setDepth(0); // Ensure it's at the bottom
 
+    // Create a container for game elements
+    const gameContainer = this.add.container(0, 0);
+    
+    // Set up game board and UI elements
     this.setupGameBoard();
     this.setupCannon();
     this.setupUI();
     this.setupInput();
     this.setupInitialBubbles();
     this.createNextBubble();
-
-    this.crosshair = this.add.circle(0, 0, 5, 0xff0000).setVisible(false);
+    
+    // Ensure crosshair is on top
+    this.crosshair = this.add.circle(0, 0, 5, 0xff0000).setVisible(false).setDepth(100);
+    
+    // Add all game elements to the container
+    if (this.bubblesGroup) {
+      // Add all bubbles from the group to the container
+      this.bubblesGroup.getChildren().forEach(bubble => {
+        gameContainer.add(bubble);
+      });
+    }
+    
+    // Add other game elements
+    [
+      this.cannon,
+      this.aim,
+      this.scoreText,
+      this.livesText,
+      this.currentBubble,
+      this.nextBubblePreview
+    ].filter(Boolean).forEach(element => {
+      gameContainer.add(element!);
+    });
   }
 
   private setupGameBoard() {
@@ -181,23 +216,42 @@ class PlayScene extends Phaser.Scene {
     const speed = 900;
     this.currentBubble.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
     this.currentBubble.setData('isMoving', true);
+    this.currentBubble.setBounce(0.2, 0.2); // Add slight bounce
 
     let settled = false;
     const settleBubbleOnce = () => {
-      if (settled) return;
+      if (settled || !this.currentBubble) return;
       settled = true;
-      this.settleBubble(this.currentBubble!);
+      
+      // Small delay to let physics settle
+      this.time.delayedCall(50, () => {
+        if (this.currentBubble) {
+          this.settleBubble(this.currentBubble!);
+        }
+      });
     };
 
-    this.physics.add.collider(this.currentBubble, this.bubblesGroup, settleBubbleOnce);
+    // Add collision with other bubbles
+    const collider = this.physics.add.collider(
+      this.currentBubble, 
+      this.bubblesGroup, 
+      () => {
+        if (!settled) {
+          this.time.delayedCall(50, settleBubbleOnce);
+        }
+        return true;
+      },
+      undefined,
+      this
+    );
 
-    this.currentBubble.setCollideWorldBounds(true);
+    this.currentBubble.setCollideWorldBounds(true, 1, 1, true);
     this.currentBubble.body.onWorldBounds = true;
 
     const onWorldBounds = (body: Phaser.Physics.Arcade.Body) => {
       if (body.gameObject === this.currentBubble) {
-        // Only settle if bubble at or close to top boundary
-        if (this.currentBubble!.y < this.gridOffsetY + 15) {
+        // Settle if bubble hits top or sides near the top
+        if (this.currentBubble!.y < this.gridOffsetY + 30) {
           settleBubbleOnce();
         }
       }
@@ -205,9 +259,12 @@ class PlayScene extends Phaser.Scene {
 
     this.physics.world.on('worldbounds', onWorldBounds);
 
-    // Cleanup event after a timeout to prevent leaks
-    this.time.delayedCall(1500, () => {
+    // Cleanup events after a timeout to prevent leaks
+    this.time.delayedCall(2000, () => {
       this.physics.world.off('worldbounds', onWorldBounds);
+      if (collider) {
+        this.physics.world.removeCollider(collider);
+      }
       if (!settled && this.currentBubble) {
         settleBubbleOnce();
       }
@@ -217,31 +274,40 @@ class PlayScene extends Phaser.Scene {
   private settleBubble(bubble: Bubble) {
     if (!bubble.active) return;
   
-    let { x, y } = bubble;
-    let minDist = Infinity, minRow = 0, minCol = 0, foundAdj = false;
-    // First, search for empty cell adjacent to others
+    const { x, y } = bubble;
+    let minDist = Infinity, minRow = 0, minCol = 0, foundSpot = false;
+    
+    // First, find the closest empty cell that's adjacent to existing bubbles
     for (let row = 0; row < this.gridRows; row++) {
       for (let col = 0; col < this.gridCols; col++) {
+        if (this.bubbleGrid[row][col]) continue; // Skip occupied cells
+        
         const spot = this.getBubblePosition(row, col);
         const dist = Phaser.Math.Distance.Between(spot.x, spot.y, x, y);
-        if (dist < minDist && !this.bubbleGrid[row][col] && this.isAdjacent(row, col)) {
+        
+        // If this spot is closer and either adjacent or we haven't found any spot yet
+        if (dist < minDist && this.isAdjacent(row, col)) {
           minDist = dist;
           minRow = row;
           minCol = col;
-          foundAdj = true;
+          foundSpot = true;
         }
       }
     }
-    // Fallback to nearest empty in top row
-    if (!foundAdj) {
+    
+    // Fallback to nearest empty cell if no adjacent spot found
+    if (!foundSpot) {
       minDist = Infinity;
-      for (let col = 0; col < this.gridCols; col++) {
-        if (!this.bubbleGrid[0][col]) {
-          const spot = this.getBubblePosition(0, col);
+      for (let row = 0; row < this.gridRows; row++) {
+        for (let col = 0; col < this.gridCols; col++) {
+          if (this.bubbleGrid[row][col]) continue;
+          
+          const spot = this.getBubblePosition(row, col);
           const dist = Phaser.Math.Distance.Between(spot.x, spot.y, x, y);
+          
           if (dist < minDist) {
             minDist = dist;
-            minRow = 0;
+            minRow = row;
             minCol = col;
           }
         }
@@ -274,8 +340,11 @@ class PlayScene extends Phaser.Scene {
   private isAdjacent(row: number, col: number): boolean {
     // Check if grid cell is adjacent to at least one occupied cell
     const directions = [
-      [-1, 0], [1, 0], [0, -1], [0, 1]
+      [-1, 0], [1, 0], [0, -1], [0, 1], // Direct neighbors
+      [-1, -1], [-1, 1], [1, -1], [1, 1] // Diagonal neighbors
     ];
+    
+    // Check all 8 directions
     for (const [dr, dc] of directions) {
       const r = row + dr;
       const c = col + dc;
@@ -283,18 +352,35 @@ class PlayScene extends Phaser.Scene {
         if (this.bubbleGrid[r][c]) return true;
       }
     }
+    
     // Top row is always adjacent (bubble can stick there)
     if (row === 0) return true;
+    
+    // Check if any bubble is close enough to attach to
+    const minDistance = this.bubbleRadius * 2.2;
+    for (let r = 0; r < this.gridRows; r++) {
+      for (let c = 0; c < this.gridCols; c++) {
+        if (this.bubbleGrid[r][c]) {
+          const dx = Math.abs(c - col);
+          const dy = Math.abs(r - row);
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < 1.5) return true; // Slightly more than 1 to account for grid offsets
+        }
+      }
+    }
+    
     return false;
   }
 
   private getBubblePosition(row: number, col: number) {
     const bubbleSpacing = this.bubbleRadius * 2.2;
     const verticalSpacing = this.bubbleRadius * 1.87;
+    // Add slight randomness to prevent perfect grid alignment issues
     const offsetX = (row % 2 === 0) ? 0 : this.bubbleRadius * 1.1;
+    const jitter = 0.98 + Math.random() * 0.04; // 0.98 to 1.02
     return {
-      x: this.gridOffsetX + (col * bubbleSpacing) + offsetX,
-      y: this.gridOffsetY + (row * verticalSpacing)
+      x: (this.gridOffsetX + (col * bubbleSpacing) + offsetX) * jitter,
+      y: (this.gridOffsetY + (row * verticalSpacing)) * jitter
     };
   }
 
