@@ -1,46 +1,59 @@
 import { PlayScene } from '@/lib/bubbleType';
 
+// Track if we've added the special bubble
+let specialBubbleAdded = false;
+
 function createBubbleLayer(scene: PlayScene, yOffset: number = 0) {
   const uiBarHeight = 60;
   const topMargin = uiBarHeight + 60;
-  const sideMargin = 24;
+  const sideMargin = 40;
   const bubbleSize = 80;
-  let spacingX = bubbleSize * 0.95;
-  const spacingY = bubbleSize * 0.85;
-
-  const rows = 1;
-  const cols = 5;
-
+  const minSpacing = bubbleSize * 0.8;
+  const maxSpacing = bubbleSize * 1.2;
+  
+  // Random number of bubbles per row (3-6)
+  const numBubbles = Phaser.Math.Between(3, 6);
   const availableWidth = scene.scale.width - sideMargin * 2;
-  let totalWidth = (cols - 1) * spacingX + bubbleSize;
-  if (totalWidth > availableWidth) {
-    spacingX = Math.max(4, (availableWidth - bubbleSize) / (cols - 1));
-    totalWidth = (cols - 1) * spacingX + bubbleSize;
-  }
-
-  const startX = sideMargin + (availableWidth - totalWidth) / 2;
+  // Removed erroneous cols and spacingX calculation.
+  
+  // Calculate dynamic spacing based on number of bubbles
+  const spacing = Math.min(maxSpacing, Math.max(minSpacing, availableWidth / (numBubbles + 1)));
+  const startX = sideMargin + (availableWidth - ((numBubbles - 1) * spacing + bubbleSize)) / 2;
   const startY = topMargin + yOffset;
-
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const xOffset = row % 2 === 0 ? 0 : spacingX / 2;
-      const x = startX + col * spacingX + xOffset;
-      const y = startY + row * spacingY;
-
-      const bubbleType = `b${(row + col) % 4 + 1}`;
-      const bubble = scene.bubbles.create(x, y, bubbleType) as Phaser.Physics.Arcade.Image & { meta?: any };
-
-      bubble.displayWidth = bubbleSize;
-      bubble.displayHeight = bubbleSize;
-      bubble.setOrigin(0.5);
-      bubble.setCircle(bubbleSize / 2);
-      bubble.setImmovable(true);
-
-      bubble.meta = {
-        creatorName: ['alpha', 'bravo', 'charlie', 'delta'][(row + col) % 4],
-        scoreValue: Phaser.Math.RND.pick([10, 20]),
-      };
+  
+  // Create bubbles with random positions and types
+  for (let i = 0; i < numBubbles; i++) {
+    // Random x position within bounds
+    const x = startX + i * spacing + Phaser.Math.Between(-10, 10);
+    // Slight vertical randomness
+    const y = startY + Phaser.Math.Between(-15, 15);
+    
+    // Determine bubble type (ensure special bubble appears only once)
+    let bubbleType: string;
+    if (!specialBubbleAdded && (yOffset > 100 || i === 1)) { // Higher chance after first few rows or second bubble
+      bubbleType = 'b4';
+      specialBubbleAdded = true;
+    } else {
+      bubbleType = `b${Phaser.Math.Between(1, 3)}`;
     }
+    
+    const bubble = scene.bubbles.create(x, y, bubbleType) as Phaser.Physics.Arcade.Image & { meta?: any, type?: string };
+    
+    // Slightly randomize bubble size
+    const sizeVariation = Phaser.Math.Between(-5, 5);
+    const finalSize = bubbleSize + sizeVariation;
+    
+    bubble.displayWidth = finalSize;
+    bubble.displayHeight = finalSize;
+    bubble.setOrigin(0.5);
+    bubble.setCircle(finalSize / 2);
+    bubble.setImmovable(true);
+    bubble.type = bubbleType; // Store type for collision detection
+    
+    bubble.meta = {
+      creatorName: ['alpha', 'bravo', 'charlie', 'delta'][Phaser.Math.Between(0, 3)],
+      scoreValue: bubbleType === 'b4' ? 100 : Phaser.Math.Between(10, 30),
+    };
   }
 }
 
