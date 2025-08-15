@@ -11,80 +11,68 @@ type Props = {
 export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
-  
+
   useEffect(() => {
-    console.log('GameCanvas useEffect triggered');
-    console.log('ref.current:', ref.current);
-    console.log('chosenCreator:', chosenCreator);
-    console.log('Phaser available:', typeof Phaser !== 'undefined');
-    
-    if (!ref.current) {
-      console.log('No ref.current, returning');
-      return;
-    }
-    
-    if (typeof Phaser === 'undefined') {
-      console.error('Phaser is not available');
-      return;
-    }
-    
-    try {
-      console.log('Creating play scene...');
-      const scene = createPlayScene(chosenCreator, onGameOver);
-      console.log('Scene created:', scene);
-      
-      if (!scene) {
-        console.error('Failed to create play scene');
-        return;
+    if (!ref.current) return;
+    if (typeof Phaser === 'undefined') return;
+
+    const container = ref.current;
+    const { clientWidth, clientHeight } = container;
+
+    const scene = createPlayScene(chosenCreator, onGameOver);
+    if (!scene) return;
+
+    const config: Phaser.Types.Core.GameConfig = {
+      type: Phaser.AUTO,
+      width: clientWidth,
+      height: clientHeight,
+      parent: container,
+      backgroundColor: '#000000',
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: clientWidth,
+        height: clientHeight,
+      },
+      physics: {
+        default: 'arcade',
+        arcade: { debug: false },
+      },
+      scene: [scene],
+    };
+
+    gameRef.current = new Phaser.Game(config);
+
+    // Listen for container resize
+    const resizeObserver = new ResizeObserver(() => {
+      if (gameRef.current) {
+        const newWidth = container.clientWidth;
+        const newHeight = container.clientHeight;
+        gameRef.current.scale.resize(newWidth, newHeight);
       }
-      
-      console.log('Creating Phaser config...');
-      const config: Phaser.Types.Core.GameConfig = {
-        type: Phaser.AUTO,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        parent: ref.current,
-        backgroundColor: '#000000',
-        physics: {
-          default: 'arcade',
-          arcade: { debug: false }
-        },
-        scene: [scene]
-      };
+    });
+    resizeObserver.observe(container);
 
-      console.log('Creating Phaser game...');
-      gameRef.current = new Phaser.Game(config);
-      console.log('Phaser game created:', gameRef.current);
-
-      return () => {
-        console.log('Cleaning up game...');
-        if (gameRef.current) {
-          gameRef.current.destroy(true);
-          gameRef.current = null;
-        }
-      };
-    } catch (error) {
-      console.error('Error initializing game:', error);
-    }
+    return () => {
+      resizeObserver.disconnect();
+      if (gameRef.current) {
+        gameRef.current.destroy(true);
+        gameRef.current = null;
+      }
+    };
   }, [chosenCreator, onGameOver]);
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      zIndex: 0,
-      backgroundColor: '#000000'
-    }}>
-      <div 
-        ref={ref} 
+    <div className="w-full h-full">
+      <div
+        ref={ref}
         style={{
           width: '100%',
           height: '100%',
-          display: 'block'
-        }} 
+          display: 'block',
+          position: 'relative',
+        }}
+        id="phaser-container"
       />
     </div>
   );

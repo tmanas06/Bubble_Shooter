@@ -140,7 +140,7 @@ export default function ProfilePage() {
               {user?.pfpUrl ? (
                 <img 
                   src={user.pfpUrl} 
-                  alt={user.displayName || 'Profile'} 
+                  alt={user.username || 'Profile'} 
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -152,7 +152,7 @@ export default function ProfilePage() {
             
             {/* User Info */}
             <h1 className="text-2xl font-bold text-white mb-1">
-              {user?.displayName || 'Guest'}
+              {user?.username || 'Guest'}
             </h1>
             <p className="text-white/70 mb-6">
               @{user?.username || 'anonymous'}

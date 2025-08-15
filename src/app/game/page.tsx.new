@@ -7,13 +7,13 @@ import Link from 'next/link';
 
 const GameCanvas = dynamicImport(
   () => import('@/components/GameCanvas').then((mod) => mod.default),
-  {
+  { 
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center h-full">
         <div className="text-white">Loading game...</div>
       </div>
-    ),
+    )
   }
 ) as ComponentType<any>;
 
@@ -33,9 +33,13 @@ export default function GamePage() {
   const [gameOver, setGameOver] = useState<GameOverParams | null>(null);
   const [showScore, setShowScore] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [score, setScore] = useState(0);
 
   useEffect(() => {
+    // Ensure we're on the client side
     setIsClient(true);
+    
+    // Only access localStorage on client side
     if (typeof window !== 'undefined') {
       const c = localStorage.getItem('chosenCreator') || 'default';
       setCreator(c);
@@ -45,17 +49,15 @@ export default function GamePage() {
     }
   }, []);
 
-  const onGameOver = useCallback(
-    ({ score, lives = 0, pops = 0 }: GameOverParams) => {
-      setGameOver({ score, lives, pops });
-      setShowScore(true);
-    },
-    []
-  );
+  const onGameOver = useCallback(({ score, lives = 0, pops = 0 }: GameOverParams) => {
+    setGameOver({ score, lives, pops });
+    setShowScore(true);
+  }, []);
 
   const handlePlayAgain = useCallback(() => {
     setShowScore(false);
     setGameOver(null);
+    setScore(0);
   }, []);
 
   if (!isClient || isLoading) {
@@ -67,34 +69,35 @@ export default function GamePage() {
   }
 
   return (
-    <div className="relative w-full min-h-screen bg-[#0B3E84] flex items-center justify-center p-4">
-      {/* Outer fixed-size game container */}
-      <div
-        className="relative w-full max-w-4xl h-[80vh] max-h-[90vh] bg-white/90 rounded-2xl overflow-hidden flex items-center justify-center"
-        style={{
-          margin: '0 auto',
-        }}
-      >
-        {/* Background */}
-        <div className="absolute inset-0 w-full h-full bg-[url('/assets/backgrounds/every.png')] bg-cover bg-center opacity-20"></div>
-
-        {/* Game fill area */}
+    <div className="relative w-full min-h-screen" style={{
+      backgroundImage: "url('/assets/backgrounds/every.png')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2rem 1rem',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <div className="w-full max-w-4xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden" style={{
+        minHeight: '80vh',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+      }}>
         {creator && (
-          <div className="relative w-full h-full">
+          <div className="flex-1 relative">
             <GameCanvas
               chosenCreator={creator}
               onGameOver={onGameOver}
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'block',
-                objectFit: 'contain',
-              }}
             />
           </div>
         )}
 
-        {/* Game Over Overlay */}
         {showScore && gameOver && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="bg-gradient-to-b from-[#35A5F7] to-[#152E92] rounded-3xl p-8 max-w-md w-full mx-4 relative overflow-hidden">
