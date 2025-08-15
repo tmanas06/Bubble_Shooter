@@ -35,59 +35,57 @@ export default function HomePage() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* Hamburger Menu */}
-      <div className="absolute top-6 right-6 z-[100]" ref={menuRef}>
-        <button 
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="p-2 rounded-full hover:bg-white/20 transition-colors"
-          aria-label="Menu"
-          style={{
-            backgroundColor: menuOpen ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
-          }}
-        >
-          <div className="w-6 h-6 flex flex-col items-center justify-center">
-            <div 
-              className={`w-5 h-0.5 bg-white rounded-full transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1.5'}`}
-            ></div>
-            <div 
-              className={`w-5 h-0.5 bg-white rounded-full transition-all duration-300 ${menuOpen ? 'opacity-0' : 'opacity-100 mb-1.5'}`}
-            ></div>
-            <div 
-              className={`w-5 h-0.5 bg-white rounded-full transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}
-            ></div>
-          </div>
-        </button>
-        
-        {/* Dropdown Menu */}
-        {menuOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 transform transition-all duration-200 origin-top-right">
-            <Link 
-              href="/profile" 
-              className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors border-b border-gray-100"
-              onClick={() => setMenuOpen(false)}
-            >
-              👤 Profile
-            </Link>
-            <Link 
-              href="/leaderboard" 
-              className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              🏆 Leaderboard
-            </Link>
-          </div>
-        )}
-      </div>
-
       {/* Main container with exact dimensions */}
       <div className="absolute w-[419px] h-[892px] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(94.6%_54.54%_at_50%_50%,#35A5F7_0%,#152E92_100%)]">
-          {/* Large background bubbles */}
-          <div className="absolute w-[406px] h-[406px] left-[-224px] top-[-159px] bg-gradient-to-b from-[#226ED8] to-[rgba(35,136,242,0)] opacity-70 rounded-full blur-[2.9px]"></div>
-          
-          {/* Top right bubble */}
-          <div className="absolute w-[100px] h-[100px] left-[334px] top-[119px] bg-gradient-to-b from-[rgba(44,155,244,0.28)] to-[rgba(48,158,245,0.098)] backdrop-blur-[13.1px] rounded-full"></div>
+          {/* White panel */}
+          <div className="absolute inset-4 rounded-3xl p-6 overflow-hidden">
+            {/* Header */}
+            <div className="relative z-20 pt-6 px-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-bold text-gray-800"></h1>
+                
+                {/* Hamburger Menu */}
+                <div className="relative" ref={menuRef}>
+                  <button 
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className="absolute top-4 right-6 z-50 p-2 rounded-full hover:bg-gray-200 transition-colors"
+                    aria-label="Menu"
+                    style={{
+                      backgroundColor: menuOpen ? 'rgba(0, 0, 0, 0.1)' : 'transparent'
+                    }}
+                  >
+                    <div className="w-6 h-6 flex flex-col items-center justify-center">
+                      <div className={`w-5 h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1.5'}`}></div>
+                      <div className={`w-5 h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${menuOpen ? 'opacity-0' : 'opacity-100 mb-1.5'}`}></div>
+                      <div className={`w-5 h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+                    </div>
+                  </button>
+                  
+                  {/* Dropdown Menu */}
+                  {menuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 transform transition-all duration-200 origin-top-right">
+                      <Link 
+                        href="/profile" 
+                        className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        👤 Profile
+                      </Link>
+                      <Link 
+                        href="/leaderboard" 
+                        className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        🏆 Leaderboard
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
           
           {/* Bottom left bubble */}
           <div className="absolute w-[100px] h-[100px] left-[-21px] top-[580px] bg-gradient-to-b from-[rgba(44,155,244,0.28)] to-[rgba(48,158,245,0.098)] backdrop-blur-[13.1px] rounded-full"></div>
