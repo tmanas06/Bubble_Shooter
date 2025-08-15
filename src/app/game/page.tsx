@@ -67,7 +67,15 @@ export default function GamePage() {
   }
 
   return (
-    <div className="relative w-full min-h-screen bg-[#0B3E84] flex items-center justify-center p-4">
+    <div 
+      className="relative w-full min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: "url('/assets/backgrounds/every.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       {/* Outer fixed-size game container */}
       <div
         className="relative w-full max-w-4xl h-[80vh] max-h-[90vh] bg-white/90 rounded-2xl overflow-hidden flex items-center justify-center"
@@ -75,8 +83,8 @@ export default function GamePage() {
           margin: '0 auto',
         }}
       >
-        {/* Background */}
-        <div className="absolute inset-0 w-full h-full bg-[url('/assets/backgrounds/every.png')] bg-cover bg-center opacity-20"></div>
+        {/* Background with white overlay */}
+        <div className="absolute inset-0 w-full h-full bg-white/90"></div>
 
         {/* Game fill area */}
         {creator && (
