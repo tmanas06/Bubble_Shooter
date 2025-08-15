@@ -1,0 +1,312 @@
+'use client';
+
+import React, { useEffect, useRef } from 'react';
+import * as Phaser from 'phaser';
+
+type BubbleType = 'b1' | 'b2' | 'b3' | 'b4';
+
+interface Bubble extends Phaser.Physics.Arcade.Sprite {
+  row: number;
+  col: number;
+  type: BubbleType;
+  getData: <T = any>(key: string) => T;
+  setData: (key: string, value: any) => this;
+}
+
+interface GameCanvasProps {
+  chosenCreator: string;
+  onGameOver: (result: { score: number; lives: number; pops: number }) => void;
+}
+
+class PlayScene extends Phaser.Scene {
+  // Game settings
+  private readonly gridCols: number = 8;
+  private readonly gridRows: number = 12;
+  private readonly bubbleTypes: BubbleType[] = ['b1', 'b2', 'b3', 'b4'];
+  private readonly bubbleRadius: number = 30;
+  private readonly gridOffsetX: number = 60;
+  private readonly gridOffsetY: number = 100;
+  private readonly bubbleGrid: (Bubble | null)[][] = [];
+  private readonly gameWidth: number = 390;
+  private readonly gameHeight: number = 844;
+  
+  // Game objects
+  private bubblesGroup!: Phaser.Physics.Arcade.Group;
+  private cannon!: Phaser.GameObjects.Sprite;
+  private aim!: Phaser.GameObjects.Sprite;
+  private currentBubble: Bubble | null = null;
+  private nextBubble: Bubble | null = null;
+  private scoreText!: Phaser.GameObjects.Text;
+  private livesText!: Phaser.GameObjects.Text;
+  
+  // Game state
+  private score: number = 0;
+  private lives: number = 5;
+  private isShooting: boolean = false;
+  
+  // Background and UI
+  private bg!: Phaser.GameObjects.Image;
+  private crosshair!: Phaser.GameObjects.Image;
+  
+  constructor() {
+    super({ key: 'PlayScene' });
+  }
+  
+  // Preload assets
+  preload() {
+    // Backgrounds
+    this.load.image('game-bg', '/assets/backgrounds/every.png');
+    this.load.image('cannon', '/assets/game_assest/cannon.png');
+    this.load.image('aim', '/assets/game_assest/aim.png');
+    
+    // Bubble types
+    this.load.image('b1', '/assets/bubbles/bubble1.png');
+    this.load.image('b2', '/assets/bubbles/bubble2.png');
+    this.load.image('b3', '/assets/bubbles/bubble3.png');
+    this.load.image('b4', '/assets/bubbles/bubble4.png');
+    this.load.image('bullet', '/assets/bubbles/bullet.png');
+    
+    // Game assets
+    this.load.image('ability1', '/assets/game_assest/ability1.png');
+    this.load.image('ability2', '/assets/game_assest/ability2.png');
+    this.load.image('bomb', '/assets/game_assest/bomb.png');
+    this.load.image('power', '/assets/game_assest/power.png');
+  }
+  
+  // Create the game
+  create() {
+    // Set up the game world
+    this.physics.world.setBounds(0, 0, this.gameWidth, this.gameHeight);
+    
+    // Add background
+    this.bg = this.add.image(0, 0, 'game-bg')
+      .setOrigin(0, 0)
+      .setDisplaySize(this.gameWidth, this.gameHeight);
+    
+    // Initialize game objects
+    this.setupGameBoard();
+    this.setupCannon();
+    this.setupUI();
+    this.setupInput();
+    this.setupInitialBubbles();
+    this.createNextBubble();
+  }
+  
+  // Set up the game board
+  private setupGameBoard(): void {
+    // Initialize the bubble grid
+    for (let row = 0; row < this.gridRows; row++) {
+      this.bubbleGrid[row] = [];
+      for (let col = 0; col < this.gridCols; col++) {
+        this.bubbleGrid[row][col] = null;
+      }
+    }
+    
+    // Create the bubbles group with physics
+    this.bubblesGroup = this.physics.add.group({
+      classType: Phaser.Physics.Arcade.Sprite as any,
+      createCallback: (bubble: Phaser.GameObjects.GameObject) => {
+        const sprite = bubble as unknown as Bubble;
+        sprite.row = -1;
+        sprite.col = -1;
+        sprite.type = 'b1'; // Default type
+        return sprite;
+      }
+    });
+  }
+  
+  // Set up the cannon
+  private setupCannon(): void {
+    this.cannon = this.add.sprite(
+      this.gameWidth / 2,
+      this.gameHeight - 50,
+      'cannon'
+    ).setOrigin(0.5, 1);
+    
+    this.aim = this.add.sprite(
+      this.cannon.x,
+      this.cannon.y - 30,
+      'aim'
+    ).setOrigin(0.5, 1);
+  }
+  
+  // Set up the UI
+  private setupUI(): void {
+    // Score text
+    this.scoreText = this.add.text(20, 20, `Score: ${this.score}`, {
+      fontSize: '24px',
+      fontFamily: 'Arial',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setScrollFactor(0);
+    
+    // Lives text
+    this.livesText = this.add.text(20, 60, `Lives: ${this.lives}`, {
+      fontSize: '24px',
+      fontFamily: 'Arial',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setScrollFactor(0);
+  }
+  
+  // Set up input handling
+  private setupInput(): void {
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.isShooting && this.currentBubble) {
+        const angle = Phaser.Math.RadToDeg(Phaser.Math.Angle.Between(
+          this.cannon.x, this.cannon.y,
+          pointer.x, pointer.y
+        ));
+        this.shootBubble(angle);
+      }
+    });
+    
+    // Add crosshair for better aiming
+    this.crosshair = this.add.circle(0, 0, 5, 0xff0000).setVisible(false);
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      this.crosshair.setPosition(pointer.x, pointer.y);
+    });
+  }
+  
+  // Create initial bubbles at the top of the screen
+  private setupInitialBubbles(): void {
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < this.gridCols; col++) {
+        if (Math.random() > 0.3) { // 70% chance to create a bubble
+          const bubbleType = this.bubbleTypes[
+            Math.floor(Math.random() * this.bubbleTypes.length)
+          ] as BubbleType;
+          this.createBubble(col, row, bubbleType);
+        }
+      }
+    }
+  }
+  
+  // Create a new bubble at the specified grid position
+  private createBubble(col: number, row: number, type: BubbleType): Bubble {
+    // Calculate position with offset for even/odd rows
+    const x = this.gridOffsetX + (col * this.bubbleRadius * 1.8);
+    const y = this.gridOffsetY + (row * this.bubbleRadius * 1.8);
+    
+    // Create bubble with physics
+    const bubble = this.physics.add.sprite(x, y, type) as unknown as Bubble;
+    
+    // Set bubble properties
+    bubble.row = row;
+    bubble.col = col;
+    bubble.type = type;
+    bubble.setData('type', type);
+    bubble.setCollideWorldBounds(true);
+    bubble.setBounce(1, 1);
+    bubble.setCircle(this.bubbleRadius);
+    
+    // Add to grid and physics group
+    if (row >= 0 && row < this.bubbleGrid.length && col >= 0 && col < this.gridCols) {
+      this.bubbleGrid[row][col] = bubble;
+    }
+    
+    if (this.bubblesGroup) {
+      this.bubblesGroup.add(bubble);
+    }
+    
+    return bubble;
+  }
+  
+  // Create the next bubble to be shot
+  private createNextBubble(): void {
+    if (this.currentBubble) return;
+    
+    const bubbleType = this.bubbleTypes[
+      Math.floor(Math.random() * this.bubbleTypes.length)
+    ] as BubbleType;
+    const x = this.gameWidth / 2;
+    const y = this.gameHeight - 100;
+    
+    this.currentBubble = this.createBubble(-1, -1, bubbleType);
+    this.currentBubble.setPosition(x, y);
+    this.isShooting = true;
+  }
+  
+  // Shoot the current bubble
+  private shootBubble(angle: number): void {
+    if (!this.currentBubble || !this.isShooting) return;
+    
+    this.isShooting = false;
+    
+    // Convert angle to radians and calculate velocity
+    const angleRad = Phaser.Math.DegToRad(angle);
+    const speed = 500;
+    const velocityX = Math.cos(angleRad) * speed;
+    const velocityY = Math.sin(angleRad) * speed;
+    
+    // Set bubble velocity
+    this.currentBubble.setVelocity(velocityX, velocityY);
+    this.currentBubble.setData('isMoving', true);
+    
+    // Create a new bubble after a delay
+    this.time.delayedCall(1000, () => {
+      this.createNextBubble();
+    });
+  }
+  
+  // Update game state
+  update(time: number, delta: number): void {
+    // Update game logic here
+  }
+}
+
+// Main React component
+export default function GameCanvas({ chosenCreator, onGameOver }: GameCanvasProps) {
+  const gameContainer = useRef<HTMLDivElement>(null);
+  const gameInstance = useRef<Phaser.Game | null>(null);
+
+  useEffect(() => {
+    // Initialize the game when the component mounts
+    if (gameContainer.current && !gameInstance.current) {
+      const config: Phaser.Types.Core.GameConfig = {
+        type: Phaser.AUTO,
+        width: 390,
+        height: 844,
+        backgroundColor: '#ffffff',
+        physics: {
+          default: 'arcade',
+          arcade: {
+            gravity: { y: 0 },
+            debug: false
+          }
+        },
+        scene: PlayScene,
+        parent: gameContainer.current,
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH
+        }
+      };
+
+      gameInstance.current = new Phaser.Game(config);
+    }
+
+    // Clean up the game when the component unmounts
+    return () => {
+      if (gameInstance.current) {
+        gameInstance.current.destroy(true);
+        gameInstance.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div 
+      ref={gameContainer} 
+      style={{ 
+        width: '100%', 
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    />
+  );
+}

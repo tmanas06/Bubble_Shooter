@@ -1,10 +1,21 @@
 'use client';
 
+import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, ComponentType } from 'react';
 import Link from 'next/link';
-import GameCanvas from '@/components/GameCanvas';
-import "./styles.scss"
+
+const GameCanvas = dynamicImport(
+  () => import('@/components/GameCanvas').then((mod) => mod.default),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-white">Loading game...</div>
+      </div>
+    )
+  }
+) as ComponentType<any>;
 
 interface GameOverParams {
   score: number;
@@ -12,18 +23,29 @@ interface GameOverParams {
   pops: number;
 }
 
+// Disable SSR for this page to avoid Next.js auth issues
+export const dynamic = 'force-dynamic';
+
 export default function GamePage() {
   const router = useRouter();
   const [creator, setCreator] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [gameOver, setGameOver] = useState<GameOverParams | null>(null);
   const [showScore, setShowScore] = useState(false);
-  const [score, setScore] = useState(0);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    const c = localStorage.getItem('chosenCreator') || 'default';
-    setCreator(c);
-    setIsLoading(false);
+    // Ensure we're on the client side
+    setIsClient(true);
+    
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      const c = localStorage.getItem('chosenCreator') || 'default';
+      setCreator(c);
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
   const onGameOver = useCallback(({ score, lives = 0, pops = 0 }: GameOverParams) => {
@@ -41,7 +63,7 @@ export default function GamePage() {
     setScore(0);
   }, []);
 
-  if (isLoading) {
+  if (!isClient || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0B3E84]">
         <div className="text-white">Loading game...</div>

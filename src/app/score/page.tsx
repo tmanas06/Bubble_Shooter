@@ -83,8 +83,19 @@ export default function ScorePage() {
 
   return (
     <div className="relative w-full min-h-screen flex flex-col bg-transparent">
+      {/* Background Image */}
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src="/assets/backgrounds/every.png"
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+        />
+      </div>
+      
       {/* Background Bubbles */}
-      <div className="fixed inset-0 overflow-hidden -z-10">
+      <div className="fixed inset-0 overflow-hidden -z-20">
         {/* Large Bubbles */}
         <div className="absolute w-[95px] h-[95px] left-[228px] top-[-1px] transform rotate-[21.3deg]">
           <div className="w-full h-full rounded-full bg-white/10"></div>
@@ -220,7 +231,7 @@ export default function ScorePage() {
               {user?.pfp_url ? (
                 <img 
                   src={user.pfp_url} 
-                  alt={user.display_name || 'Profile'} 
+                  alt={user.username || 'Profile'} 
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (

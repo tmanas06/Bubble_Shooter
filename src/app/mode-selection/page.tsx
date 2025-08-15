@@ -1,12 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useNeynarUser } from '@/hooks/useNeynarUser';
-import { useEffect, useRef, useState } from 'react';
-import { BackgroundBubbles } from '@/components/BottomBubbles';
 
-export default function HomePage() {
+export default function ModeSelection() {
   const router = useRouter();
   const { user } = useNeynarUser();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,13 +25,12 @@ export default function HomePage() {
     };
   }, []);
 
-  const handleStart = () => {
-    // Set a default creator if none exists
+  // Set default creator if not set
+  useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('chosenCreator')) {
       localStorage.setItem('chosenCreator', 'default');
     }
-    router.push('/mode-selection');
-  };
+  }, []);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -81,7 +79,7 @@ export default function HomePage() {
       </div>
 
       {/* Main container with exact dimensions */}
-      <div className="absolute w-[100vw] h-[100vh] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2 flex flex-col items-center justify-center">
+      <div className="absolute w-[419px] h-[892px] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(94.6%_54.54%_at_50%_50%,#35A5F7_0%,#152E92_100%)]">
           {/* Large background bubbles */}
@@ -113,28 +111,47 @@ export default function HomePage() {
             <div className="absolute w-[123px] h-[123px] left-[17px] top-[404px] bg-gradient-to-b from-[rgba(53,172,254,0.82)] to-[rgba(52,177,252,0.82)] rounded-full blur-[3.65px]"></div>
           </div>
           
-          {/* Bottom large bubble */}
-          <div className="absolute w-[100vw] h-[95vh]  bg-gradient-to-b from-[#226ED8] to-[rgba(35,136,242,0)]  blur-[1px]">
-           <BackgroundBubbles/>
+          {/* Content */}
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-8">
+            <h1 className="text-4xl font-bold text-white mb-12">Choose Your Mode</h1>
+            
+            <div className="w-full max-w-xs space-y-6">
+              {/* Player Button */}
+              <button 
+                onClick={() => router.push('/game')}
+                className="w-full bg-white/20 backdrop-blur-md rounded-2xl p-6 border-2 border-white/30 hover:bg-white/30 transition-all duration-300 transform hover:scale-105 flex flex-col items-center"
+              >
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-3xl">🎮</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Player</h2>
+                <p className="text-blue-100 text-sm">Play the game and compete for high scores</p>
+              </button>
+              
+              {/* Creator Button */}
+              <button 
+                onClick={() => router.push('/creator')}
+                className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-6 border-2 border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105 flex flex-col items-center"
+              >
+                <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-3xl">✨</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Creator</h2>
+                <p className="text-blue-100 text-sm">Create and customize your own levels</p>
+              </button>
+            </div>
+            
+            <Link 
+              href="/" 
+              className="mt-10 text-blue-200 hover:text-white transition-colors flex items-center text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              </svg>
+              Back to Home
+            </Link>
           </div>
         </div>
-
-        {/* Name image */}
-        <div className="absolute w-[378px] h-[202.73px] left-1/2 -translate-x-1/2 top-[324px]">
-          <img 
-            src="/assets/prop/name.png" 
-            alt="Bubble Shooter" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-        
-        {/* Start button */}
-        <button 
-          onClick={handleStart}
-          className="absolute left-1/2 -translate-x-1/2 bottom-[100px] px-12 py-4 bg-white text-[#0B3E84] text-xl font-bold rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-        >
-          Start Game
-        </button>
       </div>
     </div>
   );

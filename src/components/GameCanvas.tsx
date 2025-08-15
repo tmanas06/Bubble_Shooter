@@ -1,8 +1,7 @@
 'use client';
-
-import { useEffect, useRef } from 'react';
+import { createPlayScene } from './scenes/PlayScene';
+import React, { useEffect, useRef } from 'react';
 import * as Phaser from 'phaser';
-import { createPlayScene } from './scenes/PlayScene'
 
 type Props = {
   chosenCreator: string;
