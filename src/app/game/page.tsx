@@ -1,21 +1,13 @@
 'use client';
 
-import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, ComponentType } from 'react';
 import Link from 'next/link';
 
-const GameCanvas = dynamicImport(
-  () => import('@/components/GameCanvas').then((mod) => mod.default),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-white">Loading game...</div>
-      </div>
-    ),
-  }
-) as ComponentType<any>;
+// Import components with dynamic loading
+const HamburgerMenu = (await import('@/components/HamburgerMenu')).default;
+const GameCanvas = (await import('@/components/GameCanvas')).default;
+
 
 interface GameOverParams {
   score: number;
@@ -76,6 +68,8 @@ export default function GamePage() {
         backgroundRepeat: 'no-repeat',
       }}
     >
+      {/* Hamburger Menu */}
+      <HamburgerMenu />
       {/* Outer fixed-size game container */}
       <div
         className="relative w-full max-w-4xl h-[80vh] max-h-[90vh] bg-white/90 rounded-2xl overflow-hidden flex items-center justify-center"
@@ -89,16 +83,18 @@ export default function GamePage() {
         {/* Game fill area */}
         {creator && (
           <div className="relative w-full h-full">
-            <GameCanvas
-              chosenCreator={creator}
-              onGameOver={onGameOver}
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'block',
-                objectFit: 'contain',
-              }}
-            />
+<div style={{
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <GameCanvas
+                chosenCreator={creator}
+                onGameOver={onGameOver}
+              />
+            </div>
           </div>
         )}
 
