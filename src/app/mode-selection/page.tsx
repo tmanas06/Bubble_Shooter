@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useNeynarUser } from '@/hooks/useNeynarUser';
-import { useEffect, useRef, useState } from 'react';
 
-export default function HomePage() {
+export default function ModeSelection() {
   const router = useRouter();
   const { user } = useNeynarUser();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,13 +25,12 @@ export default function HomePage() {
     };
   }, []);
 
-  const handleStart = () => {
-    // Set a default creator if none exists
+  // Set default creator if not set
+  useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('chosenCreator')) {
       localStorage.setItem('chosenCreator', 'default');
     }
-    router.push('/mode-selection');
-  };
+  }, []);
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -112,68 +111,47 @@ export default function HomePage() {
             <div className="absolute w-[123px] h-[123px] left-[17px] top-[404px] bg-gradient-to-b from-[rgba(53,172,254,0.82)] to-[rgba(52,177,252,0.82)] rounded-full blur-[3.65px]"></div>
           </div>
           
-          {/* Bottom large bubble */}
-          <div className="absolute w-[406px] h-[406px] left-[17px] top-[713px] bg-gradient-to-b from-[#226ED8] to-[rgba(35,136,242,0)] rounded-full blur-[2.9px]">
+          {/* Content */}
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-8">
+            <h1 className="text-4xl font-bold text-white mb-12">Choose Your Mode</h1>
             
-            {/* Bubble Group 36 */}
-            <div className="absolute w-[79px] h-[80.81px] left-[-6px] top-[61px] transform rotate-[-29.11deg]">
-              <img src="/assets/bubbles/bubble1.png" alt="" className="w-full h-full object-contain" />
+            <div className="w-full max-w-xs space-y-6">
+              {/* Player Button */}
+              <button 
+                onClick={() => router.push('/game')}
+                className="w-full bg-white/20 backdrop-blur-md rounded-2xl p-6 border-2 border-white/30 hover:bg-white/30 transition-all duration-300 transform hover:scale-105 flex flex-col items-center"
+              >
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-3xl">🎮</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Player</h2>
+                <p className="text-blue-100 text-sm">Play the game and compete for high scores</p>
+              </button>
+              
+              {/* Creator Button */}
+              <button 
+                onClick={() => router.push('/creator')}
+                className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-6 border-2 border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105 flex flex-col items-center"
+              >
+                <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-3xl">✨</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Creator</h2>
+                <p className="text-blue-100 text-sm">Create and customize your own levels</p>
+              </button>
             </div>
             
-            {/* Bubble Group 40 */}
-            <div className="absolute w-[79px] h-[80.81px] left-[316px] top-[69px] transform rotate-[13.04deg]">
-              <img src="/assets/bubbles/bubble2.png" alt="" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Bubble Group 41 */}
-            <div className="absolute w-[79px] h-[80.81px] left-[204.27px] top-[-0.56px] transform rotate-[84.67deg]">
-              <img src="/assets/bubbles/bubble3.png" alt="" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Bubble Group 38 */}
-            <div className="absolute w-[79px] h-[78.4px] left-[242px] top-[84px]">
-              <img src="/assets/bubbles/bubble4.png" alt="" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Bubble Group 43 */}
-            <div className="absolute w-[79px] h-[78.4px] left-[32px] top-[8px]">
-              <img src="/assets/bubbles/bubble1.png" alt="" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Bubble Group 39 */}
-            <div className="absolute w-[81px] h-[81px] left-[62px] top-[61px] transform rotate-[121.87deg]">
-              <img src="/assets/bubbles/bubble2.png" alt="" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Bubble Group 37 */}
-            <div className="absolute w-[95px] h-[95px] left-[130px] top-[58px] transform rotate-[21.3deg]">
-              <img src="/assets/bubbles/bubble3.png" alt="" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Bubble Group 42 */}
-            <div className="absolute w-[95px] h-[95px] left-[76px] top-[-15px] transform rotate-[21.3deg]">
-              <img src="/assets/bubbles/bubble4.png" alt="" className="w-full h-full object-contain" />
-            </div>
-            
+            <Link 
+              href="/" 
+              className="mt-10 text-blue-200 hover:text-white transition-colors flex items-center text-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              </svg>
+              Back to Home
+            </Link>
           </div>
         </div>
-
-        {/* Name image */}
-        <div className="absolute w-[378px] h-[202.73px] left-1/2 -translate-x-1/2 top-[324px]">
-          <img 
-            src="/assets/prop/name.png" 
-            alt="Bubble Shooter" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-        
-        {/* Start button */}
-        <button 
-          onClick={handleStart}
-          className="absolute left-1/2 -translate-x-1/2 bottom-[100px] px-12 py-4 bg-white text-[#0B3E84] text-xl font-bold rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-        >
-          Start Game
-        </button>
       </div>
     </div>
   );
