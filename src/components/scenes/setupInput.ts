@@ -59,14 +59,31 @@ export function setupInput(scene: PlayScene, chosenCreator: string, onGameOver: 
     scene.physics.add.collider(ball, scene.bubbles, (proj, bubble) => {
       const target = bubble as Phaser.Physics.Arcade.Image & { meta?: any; type?: string };
       
-      // Check if it's a golden bubble (type 'b4')
-      const isGoldenBubble = target.type === 'b4';
-      
       // Calculate score increment based on bubble type
       let scoreIncrement = 10; // Default score
-      if (isGoldenBubble) {
+      
+      // Special golden balloon (b5)
+      if (target.type === 'b5') {
+        scoreIncrement = 1000; // Very high score for special golden balloon
+        (scene as any).specialBubbleAdded = false; // Reset flag to allow another special balloon
+        // Add visual effect for special balloon pop
+        const particles = scene.add.particles(0, 0, 'b1', {
+          x: target.x,
+          y: target.y,
+          lifespan: 1000,
+          speed: { min: 100, max: 200 },
+          scale: { start: 0.5, end: 0 },
+          gravityY: 200,
+          blendMode: 'ADD',
+          tint: 0xFFFF00 // Yellow color for golden effect
+        });
+      } 
+      // Regular golden bubble (b4)
+      else if (target.type === 'b4') {
         scoreIncrement = 100; // Higher score for golden bubbles
-      } else if (target.meta) {
+      } 
+      // Other bubbles with creator check
+      else if (target.meta) {
         const creatorHit = target.meta.creatorName === chosenCreator;
         scoreIncrement = creatorHit ? 50 : (target.meta.scoreValue || 10);
       }

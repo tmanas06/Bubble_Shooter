@@ -32,6 +32,7 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
     lastTap = 0;
     scoreText!: Phaser.GameObjects.Text;
     livesText!: Phaser.GameObjects.Text;
+    specialBubbleAdded = false;
     onGameOver!: (p: { score: number; lives: number; pops: number }) => void;
 
     getIntersectingBubble!: (x: number, y: number, radius: number) => any;
@@ -61,6 +62,7 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
       this.isShooting = true;
       this.lastTap = 0;
       this.onGameOver = onGameOver;
+      this.specialBubbleAdded = false;
 
       // Add debug graphics
       const graphics = this.add.graphics();
@@ -68,15 +70,15 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
       graphics.fillRect(0, 0, this.scale.width, this.scale.height);
       
       // Add debug text
-      const debugText = this.add.text(10, 10, 'BUBBLE SHOOTER DEBUG', { 
-        fontSize: '24px', 
-        color: '#ffffff',
-        backgroundColor: '#000000',
-        padding: { x: 10, y: 5 },
-        fontFamily: 'Arial'
-      });
-      debugText.setScrollFactor(0);
-      debugText.setDepth(1000);
+      // const debugText = this.add.text(10, 10, 'BUBBLE SHOOTER DEBUG', { 
+      //   fontSize: '24px', 
+      //   color: '#ffffff',
+      //   backgroundColor: '#000000',
+      //   padding: { x: 10, y: 5 },
+      //   fontFamily: 'Arial'
+      // });
+      // debugText.setScrollFactor(0);
+      // debugText.setDepth(1000);
 
       // Add more debug info
       const debugInfo = this.add.text(10, 50, '', {

@@ -1,9 +1,7 @@
 import { PlayScene } from '@/lib/bubbleType';
 
-// Track if we've added the special bubble
-let specialBubbleAdded = false;
-
-function createBubbleLayer(scene: PlayScene, yOffset: number = 0) {
+// Track special bubble state in the scene
+function createBubbleLayer(scene: PlayScene & { specialBubbleAdded?: boolean }, yOffset: number = 0) {
   const uiBarHeight = 60;
   const topMargin = uiBarHeight + 60;
   const sideMargin = 40;
@@ -28,13 +26,23 @@ function createBubbleLayer(scene: PlayScene, yOffset: number = 0) {
     // Slight vertical randomness
     const y = startY + Phaser.Math.Between(-15, 15);
     
-    // Determine bubble type (ensure special bubble appears only once)
+    // Choose a random bubble type
     let bubbleType: string;
-    if (!specialBubbleAdded && (yOffset > 100 || i === 1)) { // Higher chance after first few rows or second bubble
-      bubbleType = 'b4';
-      specialBubbleAdded = true;
-    } else {
-      bubbleType = `b${Phaser.Math.Between(1, 3)}`;
+    const rand = Math.random();
+  
+    // Check for special golden balloon (every 1000 points)
+    if (scene.score > 0 && scene.score % 1000 < 50 && !(scene as any).specialBubbleAdded) {
+      bubbleType = 'b5'; // Special golden balloon
+      (scene as any).specialBubbleAdded = true;
+    } 
+    // Normal bubble distribution with equal chance for all types
+    else {
+      // Equal chance for b1, b2, b3, b4
+      const randType = Math.random();
+      if (randType < 0.25) bubbleType = 'b1';
+      else if (randType < 0.5) bubbleType = 'b2';
+      else if (randType < 0.75) bubbleType = 'b3';
+      else bubbleType = 'b4';
     }
     
     const bubble = scene.bubbles.create(x, y, bubbleType) as Phaser.Physics.Arcade.Image & { meta?: any, type?: string };
