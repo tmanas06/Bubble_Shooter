@@ -148,3 +148,12 @@ export const SIGNED_KEY_REQUEST_TYPE = [
   { name: 'key', type: 'bytes' },
   { name: 'deadline', type: 'uint256' },
 ];
+
+export const BALL_COLORS = [
+  "0xff0000", // red
+  "0x00ff00", // green
+  "0x0000ff", // blue
+  "0xffff00", // yellow
+  "0xff00ff", // magenta
+  "0x00ffff", // cyan
+];
