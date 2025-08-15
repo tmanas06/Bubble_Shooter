@@ -126,17 +126,6 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
           console.log('Game objects after creation:');
           console.log('Bubbles:', this.bubbles?.getChildren().length || 0);
           console.log('All game objects:', this.children.list);
-          
-          // Add a test bubble to verify rendering
-          const testBubble = this.add.circle(100, 100, 30, 0xff0000);
-          this.tweens.add({
-            targets: testBubble,
-            x: this.scale.width - 100,
-            y: this.scale.height - 100,
-            duration: 2000,
-            yoyo: true,
-            repeat: -1
-          });
         });
       } catch (error: unknown) {
         console.error('Error in create():', error);
