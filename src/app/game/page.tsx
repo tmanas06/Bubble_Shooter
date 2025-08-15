@@ -1,18 +1,21 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, ComponentType } from 'react';
 import Link from 'next/link';
 
-const GameCanvas = dynamic(() => import('@/components/GameCanvas'), { 
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-white">Loading game...</div>
-    </div>
-  )
-});
+const GameCanvas = dynamicImport(
+  () => import('@/components/GameCanvas').then((mod) => mod.default),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-white">Loading game...</div>
+      </div>
+    )
+  }
+) as ComponentType<any>;
 
 interface GameOverParams {
   score: number;
@@ -20,18 +23,29 @@ interface GameOverParams {
   pops: number;
 }
 
+// Disable SSR for this page to avoid Next.js auth issues
+export const dynamic = 'force-dynamic';
+
 export default function GamePage() {
   const router = useRouter();
   const [creator, setCreator] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [gameOver, setGameOver] = useState<GameOverParams | null>(null);
   const [showScore, setShowScore] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Default to a creator if none is set
-    const c = localStorage.getItem('chosenCreator') || 'default';
-    setCreator(c);
-    setIsLoading(false);
+    // Ensure we're on the client side
+    setIsClient(true);
+    
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      const c = localStorage.getItem('chosenCreator') || 'default';
+      setCreator(c);
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
   const onGameOver = useCallback(({ score, lives = 0, pops = 0 }: GameOverParams) => {
@@ -46,7 +60,7 @@ export default function GamePage() {
     setCreator(prev => prev);
   }, []);
 
-  if (isLoading) {
+  if (!isClient || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0B3E84]">
         <div className="text-white">Loading game...</div>
@@ -71,7 +85,15 @@ export default function GamePage() {
       <div className="absolute w-[419px] h-[892px] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2">
         {/* Game Canvas Container */}
         <div className="relative w-full h-full overflow-hidden">
-          {creator && <GameCanvas chosenCreator={creator} onGameOver={onGameOver} />}
+          {creator && (
+            <div className="w-full h-full">
+              <GameCanvas 
+                key={creator} // Force re-render when creator changes
+                chosenCreator={creator} 
+                onGameOver={onGameOver} 
+              />
+            </div>
+          )}
           
           {/* Back Button */}
           <button 

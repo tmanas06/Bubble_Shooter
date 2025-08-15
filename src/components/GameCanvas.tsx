@@ -1,365 +1,425 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as Phaser from 'phaser';
 
-type Props = {
+type BubbleType = 'b1' | 'b2' | 'b3' | 'b4';
+
+interface Bubble extends Phaser.Physics.Arcade.Sprite {
+  row: number;
+  col: number;
+  type: BubbleType;
+  getData: <T = any>(key: string) => T;
+  setData: (key: string, value: any) => this;
+}
+
+interface GameCanvasProps {
   chosenCreator: string;
-  onGameOver: (p: { score: number; lives: number; pops: number }) => void;
-};
+  onGameOver: (result: { score: number; lives: number; pops: number }) => void;
+}
 
-export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const gameRef = useRef<Phaser.Game | null>(null);
+class PlayScene extends Phaser.Scene {
+  private gridCols = 8;
+  private gridRows = 12;
+  private bubbleTypes: BubbleType[] = ['b1', 'b2', 'b3', 'b4'];
+  private bubbleRadius = 14;
+  private bubbleScale = 0.5;
+  private gridOffsetX = 30;
+  private gridOffsetY = 60;
+  private bubbleGrid: (Bubble | null)[][] = [];
+  private gameWidth = 390;
+  private gameHeight = 844;
 
-  useEffect(() => {
-    if (!ref.current) return;
+  private bubblesGroup!: Phaser.Physics.Arcade.Group;
+  private cannon!: Phaser.GameObjects.Sprite;
+  private aim!: Phaser.GameObjects.Sprite;
+  private crosshair!: Phaser.GameObjects.Arc;
+  private bg!: Phaser.GameObjects.Image;
+  private currentBubble: Bubble | null = null;
+  private nextBubbleType: BubbleType = 'b1';
+  private nextBubblePreview!: Phaser.GameObjects.Sprite;
+  private scoreText!: Phaser.GameObjects.Text;
+  private livesText!: Phaser.GameObjects.Text;
+  private score = 0;
+  private lives = 3;
+  private isShooting = false;
+  private pops = 0;
+  private placing = false;
 
-    class Play extends Phaser.Scene {
-      bg!: Phaser.GameObjects.Image;
-      cannon!: Phaser.GameObjects.Image;
-      aim!: Phaser.GameObjects.Image;
-      bubbles!: Phaser.Physics.Arcade.Group;
-      crosshair!: Phaser.GameObjects.Image;
-      score = 0;
-      lives = 5;
-      pops = 0;
-      isShooting = true;
-      lastTap = 0;
-      scoreText!: Phaser.GameObjects.Text;
-      livesText!: Phaser.GameObjects.Text;
+  constructor() {
+    super({ key: 'PlayScene' });
+  }
 
-      preload() {
-        // Backgrounds
-        this.load.image('bg', '/assets/backgrounds/game_bg.png');
-        
-        // Game elements
-        this.load.image('cannon', '/assets/game_assest/cannon.png');
-        this.load.image('aim', '/assets/game_assest/aim.png');
-        
-        // Bubbles
-        this.load.image('b1', '/assets/bubbles/bubble1.png');
-        this.load.image('b2', '/assets/bubbles/bubble2.png');
-        this.load.image('b3', '/assets/bubbles/bubble3.png');
-        this.load.image('b4', '/assets/bubbles/bubble4.png');
-        
-        // UI Elements
-        this.load.image('ability1', '/assets/game_assest/ability1.png');
-        this.load.image('ability2', '/assets/game_assest/ability2.png');
-        this.load.image('bomb', '/assets/game_assest/bomb.png');
-        this.load.image('power', '/assets/game_assest/power.png');
-      }
+  preload() {
+    this.load.image('game-bg', '/assets/backgrounds/every.png');
+    this.load.image('cannon', '/assets/game_assest/cannon.png');
+    this.load.image('aim', '/assets/game_assest/aim.png');
+    this.load.image('b1', '/assets/bubbles/bubble1.png');
+    this.load.image('b2', '/assets/bubbles/bubble2.png');
+    this.load.image('b3', '/assets/bubbles/bubble3.png');
+    this.load.image('b4', '/assets/bubbles/bubble4.png');
+  }
 
-      create() {
-        // Add background
-        this.add.image(195, 422, 'bg');
-        
-        // Add UI elements
-        this.add.rectangle(195, 40, 350, 60, 0x000000, 0.5).setOrigin(0.5);
-        
-        // Score display
-        this.add.text(30, 20, 'SCORE', { 
-          fontSize: '16px', 
-          color: '#FFFFFF',
-          fontFamily: 'Arial, sans-serif'
-        });
-        
-        this.scoreText = this.add.text(30, 40, '0', { 
-          fontSize: '24px', 
-          color: '#FFD700',
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold'
-        } as Phaser.Types.GameObjects.Text.TextStyle);
-        
-        // Lives display
-        this.add.text(150, 20, 'LIVES', { 
-          fontSize: '16px', 
-          color: '#FFFFFF',
-          fontFamily: 'Arial, sans-serif'
-        });
-        
-        this.livesText = this.add.text(150, 40, '5', { 
-          fontSize: '24px', 
-          color: '#FF6B6B',
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold'
-        } as Phaser.Types.GameObjects.Text.TextStyle);
-        
-        // Game elements
-        this.cannon = this.add.image(195, 760, 'cannon').setOrigin(0.5).setScale(0.9);
-        this.crosshair = this.add.image(195, 520, 'aim').setAlpha(0.9).setScale(0.7);
-        
-        // Ability buttons with cooldown indicators
-        const ability1 = this.add.image(300, 40, 'ability1').setScale(0.8).setInteractive();
-        const ability2 = this.add.image(350, 40, 'ability2').setScale(0.8).setInteractive();
-        
-        // Add cooldown graphics
-        const cooldown1 = this.add.graphics();
-        const cooldown2 = this.add.graphics();
-        
-        ability1.on('pointerdown', () => {
-          // Handle ability 1 (Bomb)
-          if (this.isShooting) {
-            console.log('Bomb ability used');
-            // Add bomb effect
-            const bomb = this.add.image(195, 300, 'bomb').setScale(0.5);
-            this.tweens.add({
-              targets: bomb,
-              scale: 2,
-              alpha: 0,
-              duration: 500,
-              onComplete: () => bomb.destroy()
-            });
-            
-            // Destroy nearby bubbles
-            this.bubbles.getChildren().forEach((bubble: any) => {
-              const distance = Phaser.Math.Distance.Between(195, 300, bubble.x, bubble.y);
-              if (distance < 150) {
-                this.onBubblePop(bubble);
-              }
-            });
-          }
-        });
-        
-        ability2.on('pointerdown', () => {
-          // Handle ability 2 (Power Shot)
-          if (this.isShooting) {
-            console.log('Power shot ability used');
-            // Add power shot effect
-            const power = this.add.image(this.crosshair.x, this.crosshair.y, 'power').setScale(0.7);
-            this.tweens.add({
-              targets: power,
-              scale: 1.5,
-              alpha: 0,
-              duration: 400,
-              onComplete: () => power.destroy()
-            });
-            
-            // Pop all bubbles in a line
-            const bubbles = this.bubbles.getChildren() as any[];
-            for (const bubble of bubbles) {
-              if (Math.abs(bubble.x - this.crosshair.x) < 30) {
-                this.onBubblePop(bubble);
-              }
-            }
-          }
-        });
-        
-        this.bubbles = this.physics.add.group({ collideWorldBounds: false, allowGravity: false });
+  create() {
+    this.physics.world.setBounds(0, 0, this.gameWidth, this.gameHeight);
+    this.bg = this.add.image(0, 0, 'game-bg')
+      .setOrigin(0, 0)
+      .setDisplaySize(this.gameWidth, this.gameHeight)
+      .setScrollFactor(0);
 
-        // Bubble configurations based on reference image
-        const bubbleConfigs = [
-          // Top-left cluster
-          { x: 50, y: 50, width: 75, height: 75, rotation: 0 },
-          { x: 100, y: 40, width: 65, height: 65, rotation: 10 },
-          { x: 40, y: 100, width: 70, height: 70, rotation: -5 },
-          
-          // Top-center cluster
-          { x: 150, y: 30, width: 85, height: 85, rotation: 15 },
-          { x: 200, y: 50, width: 75, height: 75, rotation: -10 },
-          { x: 250, y: 40, width: 65, height: 65, rotation: 5 },
-          
-          // Top-right cluster
-          { x: 300, y: 60, width: 80, height: 80, rotation: -15 },
-          { x: 340, y: 100, width: 70, height: 70, rotation: 10 },
-          
-          // Middle-left cluster
-          { x: 30, y: 180, width: 90, height: 90, rotation: 20 },
-          { x: 80, y: 200, width: 75, height: 75, rotation: -10 },
-          { x: 40, y: 250, width: 65, height: 65, rotation: 5 },
-          
-          // Middle-center cluster
-          { x: 180, y: 200, width: 95, height: 95, rotation: -15 },
-          { x: 230, y: 180, width: 85, height: 85, rotation: 10 },
-          { x: 280, y: 200, width: 75, height: 75, rotation: -5 },
-          
-          // Bottom-left cluster
-          { x: 50, y: 320, width: 70, height: 70, rotation: 10 },
-          { x: 100, y: 340, width: 80, height: 80, rotation: -15 },
-          { x: 40, y: 380, width: 65, height: 65, rotation: 5 },
-          
-          // Bottom-center cluster
-          { x: 180, y: 350, width: 90, height: 90, rotation: -10 },
-          { x: 230, y: 330, width: 75, height: 75, rotation: 15 },
-          { x: 280, y: 350, width: 65, height: 65, rotation: -5 },
-          
-          // Bottom-right cluster
-          { x: 320, y: 320, width: 80, height: 80, rotation: 10 },
-          { x: 350, y: 280, width: 70, height: 70, rotation: -15 }
-        ];
-        
-        // Adjust y-positions to be lower on screen
-        bubbleConfigs.forEach(bubble => {
-          bubble.y += 100; // Move all bubbles down
-        });
+    this.setupGameBoard();
+    this.setupCannon();
+    this.setupUI();
+    this.setupInput();
+    this.setupInitialBubbles();
+    this.createNextBubble();
 
-        // Create bubbles at specified positions
-        bubbleConfigs.forEach((config, index) => {
-          // Use different bubble types in sequence
-          const bubbleType = `b${(index % 4) + 1}`;
-          const bubble = this.bubbles.create(config.x, config.y, bubbleType) as Phaser.Physics.Arcade.Image & { meta?: any };
-          
-          // Set size and scale based on the config
-          bubble.displayWidth = config.width;
-          bubble.displayHeight = config.height;
-          bubble.setOrigin(0.5);
-          
-          // Apply rotation if specified
-          if (config.rotation !== 0) {
-            bubble.setRotation(Phaser.Math.DegToRad(config.rotation));
-          }
-          
-          // Set bubble metadata
-          bubble.meta = {
-            creatorName: ['alpha', 'bravo', 'charlie', 'delta'][index % 4],
-            scoreValue: Phaser.Math.RND.pick([10, 20])
-          };
-          
-          // Set collision circle (use the smaller dimension for radius)
-          const radius = Math.min(config.width, config.height) / 2;
-          bubble.setCircle(radius);
-          bubble.setImmovable(true);
-        });
+    this.crosshair = this.add.circle(0, 0, 5, 0xff0000).setVisible(false);
+  }
 
-        this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-          if (!this.isShooting) return;
-          if (this.lives < 0.5) return this.end();
-          const now = this.time.now;
-          if (now - this.lastTap < 100) return;
-          this.lastTap = now;
-          const target = this.getIntersectingBubble(this.crosshair.x, this.crosshair.y, 50);
-          if (!target) {
-            this.onBubbleMiss();
-            return;
-          }
-          const creatorHit = target.meta?.creatorName === chosenCreator;
-          if (creatorHit) {
-            this.score += 50;
-            this.lives -= 0.5;
-            this.pops += 1;
-          } else {
-            this.score += target.meta?.scoreValue || 10;
-            this.lives -= 1;
-            this.pops += 1;
-          }
-          this.pop(target);
-          this.cooldown();
-          if (this.lives < 0.5) this.end();
-        });
-
-        this.tweens.add({
-          targets: this.crosshair,
-          y: 300,
-          duration: 900,
-          yoyo: true,
-          repeat: -1,
-          ease: 'Sine.inOut'
-        });
-      }
-
-      getIntersectingBubble(x: number, y: number, radius: number) {
-        let hit: any = null;
-        const children = this.bubbles.getChildren() as any[];
-        for (const b of children) {
-          const dx = b.x - x;
-          const dy = b.y - y;
-          const d = Math.sqrt(dx*dx + dy*dy);
-          if (d <= radius) { hit = b; break; }
-        }
-        return hit;
-      }
-
-      pop(b: any) {
-        this.tweens.add({
-          targets: b,
-          scale: 1.3,
-          duration: 80,
-          yoyo: true,
-          onComplete: () => b.destroy()
-        });
-        const txt = this.add.text(b.x, b.y, `+${Math.round(this.score)}`, { fontSize: '14px', color: '#fff' }).setOrigin(0.5);
-        this.tweens.add({ targets: txt, y: b.y - 30, alpha: 0, duration: 600, onComplete: () => txt.destroy() });
-      }
-
-      cooldown() {
-        this.isShooting = false;
-        this.crosshair.setAlpha(0.4);
-        this.time.delayedCall(500, () => { this.isShooting = true; this.crosshair.setAlpha(0.9); });
-      }
-
-      onBubbleMiss() {
-        this.lives--;
-        this.cooldown();
-        
-        // Update lives display
-        this.livesText.setText(this.lives.toString());
-        
-        // Flash effect when losing a life
-        this.cameras.main.flash(200, 255, 0, 0, false, (camera: any, progress: number) => {
-          if (progress === 1) {
-            // Reset camera effects after flash
-            this.cameras.main.resetFX();
-          }
-        });
-        
-        if (this.lives <= 0) {
-          this.end();
-        }
-      }
-      
-      onBubblePop(bubble: Phaser.GameObjects.GameObject) {
-        bubble.destroy();
-        this.score += 10;
-        this.pops++;
-        this.scoreText.setText(this.score.toString());
-        
-        // Check for game over condition
-        if (this.bubbles.getLength() <= 0) {
-          this.end();
-        }
-      }
-      
-      updateScore() {
-        this.scoreText.setText(this.score.toString());
-      }
-      
-      updateLives() {
-        this.livesText.setText(this.lives.toString());
-        
-        // Flash effect when losing a life
-        this.cameras.main.flash(200, 255, 0, 0, false, (camera: any, progress: number) => {
-          if (progress === 1) {
-            // Reset camera effects after flash
-            this.cameras.main.resetFX();
-          }
-        });
-      }
-      
-      end() {
-        this.isShooting = false;
-        this.time.delayedCall(300, () => {
-          onGameOver({ score: Math.round(this.score), lives: Math.max(this.lives, 0), pops: this.pops });
-        });
+  private setupGameBoard() {
+    for (let row = 0; row < this.gridRows; row++) {
+      this.bubbleGrid[row] = [];
+      for (let col = 0; col < this.gridCols; col++) {
+        this.bubbleGrid[row][col] = null;
       }
     }
+    this.bubblesGroup = this.physics.add.group();
+  }
 
+  private setupCannon() {
+    this.cannon = this.add.sprite(this.gameWidth / 2, this.gameHeight - 18, 'cannon');
+    this.cannon.setOrigin(0.5, 1);
+    this.cannon.setScale(0.7);
+    this.cannon.setAngle(-90);
+
+    this.aim = this.add.sprite(this.cannon.x, this.cannon.y, 'aim');
+    this.aim.setOrigin(0.5, 1);
+    this.aim.setScale(0.6);
+    this.aim.setAngle(-90);
+  }
+
+  private setupUI() {
+    this.scoreText = this.add.text(20, 20, `Score: ${this.score}`, {
+      fontSize: '24px', fontFamily: 'Arial',
+      color: '#ffffff', stroke: '#000000', strokeThickness: 4
+    });
+    this.livesText = this.add.text(20, 60, `Lives: ${this.lives}`, {
+      fontSize: '24px', fontFamily: 'Arial',
+      color: '#ffffff', stroke: '#000000', strokeThickness: 4
+    });
+  }
+
+  private setupInput() {
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.isShooting && this.currentBubble) {
+        let angle = Phaser.Math.Angle.Between(
+          this.cannon.x, this.cannon.y, pointer.x, pointer.y
+        );
+        angle = Phaser.Math.Clamp(angle, -2.25, -0.9);
+        this.shootBubble(angle);
+      }
+    });
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      this.crosshair.setPosition(pointer.x, pointer.y);
+    });
+  }
+
+  private setupInitialBubbles() {
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < this.gridCols; col++) {
+        if (Math.random() > 0.3) {
+          const type = Phaser.Utils.Array.GetRandom(this.bubbleTypes) as BubbleType;
+          this.createBubble(col, row, type);
+        }
+      }
+    }
+  }
+
+  private createBubble(col: number, row: number, type: BubbleType): Bubble {
+    const bubbleSpacing = this.bubbleRadius * 2.2;
+    const verticalSpacing = this.bubbleRadius * 1.87;
+    const offsetX = (row % 2 === 0) ? 0 : this.bubbleRadius * 1.1;
+    const x = this.gridOffsetX + (col * bubbleSpacing) + offsetX;
+    const y = this.gridOffsetY + (row * verticalSpacing);
+
+    const bubble = this.physics.add.sprite(x, y, type) as unknown as Bubble;
+    bubble.row = row; bubble.col = col; bubble.type = type;
+    bubble.setData('type', type);
+    bubble.setCircle(this.bubbleRadius);
+    bubble.setScale(this.bubbleScale);
+    bubble.setImmovable(true);
+
+    if (row >= 0 && row < this.gridRows && col >= 0 && col < this.gridCols) {
+      this.bubbleGrid[row][col] = bubble;
+    }
+    this.bubblesGroup.add(bubble);
+    return bubble;
+  }
+
+  private createNextBubble() {
+    if (this.nextBubblePreview) this.nextBubblePreview.destroy();
+    this.nextBubbleType = Phaser.Utils.Array.GetRandom(this.bubbleTypes) as BubbleType;
+    this.nextBubblePreview = this.add.sprite(
+      this.cannon.x + 31, this.cannon.y - 25, this.nextBubbleType
+    ).setScale(0.35);
+    this.nextBubblePreview.setDepth(20);
+    if (this.currentBubble) this.currentBubble.destroy();
+    this.currentBubble = this.physics.add.sprite(
+      this.cannon.x, this.cannon.y - 40, this.nextBubbleType
+    ) as unknown as Bubble;
+    this.currentBubble.setScale(this.bubbleScale);
+    this.currentBubble.setData('type', this.nextBubbleType);
+    this.currentBubble.setImmovable(false);
+    this.isShooting = true;
+    this.placing = false;
+  }
+
+  private shootBubble(angle: number) {
+    if (!this.currentBubble || !this.isShooting) return;
+    this.isShooting = false;
+    const speed = 900;
+    this.currentBubble.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+    this.currentBubble.setData('isMoving', true);
+
+    let settled = false;
+    const settleBubbleOnce = () => {
+      if (settled) return;
+      settled = true;
+      this.settleBubble(this.currentBubble!);
+    };
+
+    this.physics.add.collider(this.currentBubble, this.bubblesGroup, settleBubbleOnce);
+
+    this.currentBubble.setCollideWorldBounds(true);
+    this.currentBubble.body.onWorldBounds = true;
+
+    const onWorldBounds = (body: Phaser.Physics.Arcade.Body) => {
+      if (body.gameObject === this.currentBubble) {
+        // Only settle if bubble at or close to top boundary
+        if (this.currentBubble!.y < this.gridOffsetY + 15) {
+          settleBubbleOnce();
+        }
+      }
+    };
+
+    this.physics.world.on('worldbounds', onWorldBounds);
+
+    // Cleanup event after a timeout to prevent leaks
+    this.time.delayedCall(1500, () => {
+      this.physics.world.off('worldbounds', onWorldBounds);
+      if (!settled && this.currentBubble) {
+        settleBubbleOnce();
+      }
+    });
+  }
+
+  private settleBubble(bubble: Bubble) {
+    if (!bubble.active) return;
+  
+    let { x, y } = bubble;
+    let minDist = Infinity, minRow = 0, minCol = 0, foundAdj = false;
+    // First, search for empty cell adjacent to others
+    for (let row = 0; row < this.gridRows; row++) {
+      for (let col = 0; col < this.gridCols; col++) {
+        const spot = this.getBubblePosition(row, col);
+        const dist = Phaser.Math.Distance.Between(spot.x, spot.y, x, y);
+        if (dist < minDist && !this.bubbleGrid[row][col] && this.isAdjacent(row, col)) {
+          minDist = dist;
+          minRow = row;
+          minCol = col;
+          foundAdj = true;
+        }
+      }
+    }
+    // Fallback to nearest empty in top row
+    if (!foundAdj) {
+      minDist = Infinity;
+      for (let col = 0; col < this.gridCols; col++) {
+        if (!this.bubbleGrid[0][col]) {
+          const spot = this.getBubblePosition(0, col);
+          const dist = Phaser.Math.Distance.Between(spot.x, spot.y, x, y);
+          if (dist < minDist) {
+            minDist = dist;
+            minRow = 0;
+            minCol = col;
+          }
+        }
+      }
+    }
+  
+    if (this.bubbleGrid[minRow][minCol]) {
+      bubble.destroy();
+      this.createNextBubble();
+      return;
+    }
+  
+    bubble.x = this.getBubblePosition(minRow, minCol).x;
+    bubble.y = this.getBubblePosition(minRow, minCol).y;
+    bubble.setVelocity(0, 0);
+    bubble.setImmovable(true);
+    bubble.setData('isMoving', false);
+    bubble.row = minRow;
+    bubble.col = minCol;
+    this.bubbleGrid[minRow][minCol] = bubble;
+  
+    const cluster = this.findCluster(minRow, minCol, bubble.getData('type'));
+    if (cluster.length >= 3) {
+      this.popBubbles(cluster);
+    }
+    this.createNextBubble();
+  }
+  
+
+  private isAdjacent(row: number, col: number): boolean {
+    // Check if grid cell is adjacent to at least one occupied cell
+    const directions = [
+      [-1, 0], [1, 0], [0, -1], [0, 1]
+    ];
+    for (const [dr, dc] of directions) {
+      const r = row + dr;
+      const c = col + dc;
+      if (r >= 0 && r < this.gridRows && c >= 0 && c < this.gridCols) {
+        if (this.bubbleGrid[r][c]) return true;
+      }
+    }
+    // Top row is always adjacent (bubble can stick there)
+    if (row === 0) return true;
+    return false;
+  }
+
+  private getBubblePosition(row: number, col: number) {
+    const bubbleSpacing = this.bubbleRadius * 2.2;
+    const verticalSpacing = this.bubbleRadius * 1.87;
+    const offsetX = (row % 2 === 0) ? 0 : this.bubbleRadius * 1.1;
+    return {
+      x: this.gridOffsetX + (col * bubbleSpacing) + offsetX,
+      y: this.gridOffsetY + (row * verticalSpacing)
+    };
+  }
+
+  private findCluster(row: number, col: number, type: string): Bubble[] {
+    const stack = [{ row, col }];
+    const visited = new Set<string>();
+    const cluster: Bubble[] = [];
+    while (stack.length > 0) {
+      const { row, col } = stack.pop()!;
+      if (row < 0 || row >= this.gridRows || col < 0 || col >= this.gridCols) continue;
+      if (visited.has(`${row},${col}`)) continue;
+      const b = this.bubbleGrid[row][col];
+      if (!b || b.getData('type') !== type) continue;
+      cluster.push(b);
+      visited.add(`${row},${col}`);
+      stack.push({ row: row + 1, col });
+      stack.push({ row: row - 1, col });
+      stack.push({ row, col: col + 1 });
+      stack.push({ row, col: col - 1 });
+    }
+    return cluster;
+  }
+
+  private popBubbles(cluster: Bubble[]) {
+    cluster.forEach(bubble => {
+      if (bubble.row >= 0 && bubble.col >= 0) this.bubbleGrid[bubble.row][bubble.col] = null;
+      this.tweens.add({
+        targets: bubble,
+        scale: 0,
+        duration: 180,
+        onComplete: () => { bubble.destroy(); this.pops++; }
+      });
+    });
+    this.score += cluster.length * 10;
+    this.scoreText.setText(`Score: ${this.score}`);
+  }
+
+  update() {
+    const pointer = this.input.activePointer;
+    let angle = -Math.PI / 2;
+    if (pointer.isDown) {
+      angle = Phaser.Math.Angle.Between(this.cannon.x, this.cannon.y, pointer.x, pointer.y);
+      angle = Phaser.Math.Clamp(angle, -2.25, -0.9);
+      this.cannon.setAngle(Phaser.Math.RadToDeg(angle) + 90);
+      this.aim.setAngle(Phaser.Math.RadToDeg(angle) + 90);
+    } else {
+      this.cannon.setAngle(-90);
+      this.aim.setAngle(-90);
+    }
+    if (this.nextBubblePreview) {
+      this.nextBubblePreview.x = this.cannon.x + 31;
+      this.nextBubblePreview.y = this.cannon.y - 25;
+    }
+    if (this.currentBubble && !this.currentBubble.getData('isMoving')) {
+      this.currentBubble.x = this.cannon.x;
+      this.currentBubble.y = this.cannon.y - 40;
+    }
+  }
+}
+
+const GameCanvas: React.FC<GameCanvasProps> = ({ chosenCreator, onGameOver }) => {
+  const gameRef = useRef<Phaser.Game | null>(null);
+  const gameContainerRef = useRef<HTMLDivElement>(null);
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!gameContainerRef.current || hasInitialized.current) return;
+    hasInitialized.current = true;
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
+      parent: gameContainerRef.current,
       width: 390,
       height: 844,
-      parent: ref.current,
       backgroundColor: '#000000',
-      physics: { default: 'arcade', arcade: { debug: false } },
-      scene: [Play]
+      physics: {
+        default: 'arcade',
+        arcade: { gravity: { x: 0, y: 0 }, debug: false, fps: 60 },
+      },
+      scene: PlayScene,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 390, height: 844,
+      },
+      input: {
+        activePointers: 2, keyboard: true, mouse: true, touch: true,
+      },
+      render: { pixelArt: false, antialias: true },
     };
 
-    gameRef.current = new Phaser.Game(config);
-
-    return () => {
-      gameRef.current?.destroy(true);
-      gameRef.current = null;
-    };
+    try {
+      gameRef.current = new Phaser.Game(config);
+      const handleResize = () => { if (gameRef.current) gameRef.current.scale.refresh(); };
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        if (gameRef.current) {
+          gameRef.current.destroy(true);
+          gameRef.current = null;
+        }
+        hasInitialized.current = false;
+      };
+    } catch (error) {
+      console.error('Error initializing game:', error);
+    }
   }, [chosenCreator, onGameOver]);
 
-  return <div ref={ref} className="w-full h-full" />;
-}
+  return (
+    <div
+      ref={gameContainerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation',
+      }}
+      onContextMenu={(e) => e.preventDefault()}
+    />
+  );
+};
+
+export default GameCanvas;
