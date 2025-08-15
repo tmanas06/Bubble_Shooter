@@ -55,7 +55,8 @@ export interface PlayScene extends Phaser.Scene {
   crosshair: Phaser.GameObjects.Image;
   bubbles: Phaser.Physics.Arcade.Group;
   score: number;
-  lives: number;
+  timerText: Phaser.GameObjects.Text; // actual text object
+  timeLeft: number;
   pops: number;
   isShooting: boolean;
   lastTap: number;
@@ -69,7 +70,6 @@ export interface PlayScene extends Phaser.Scene {
   onBubbleMiss: (scene: PlayScene) => void;
   onBubblePop: (scene: PlayScene, bubble: Phaser.GameObjects.GameObject) => void;
   updateScore: (scene: PlayScene) => void;
-  updateLives: (scene: PlayScene) => void;
   endGame: (scene: PlayScene, onGameOver: (p: { score: number; lives: number; pops: number }) => void) => void;
   
 }

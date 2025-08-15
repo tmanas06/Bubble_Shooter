@@ -45,6 +45,7 @@
     "phaser": "^3.90.0",
     "react": "^19",
     "react-dom": "^19",
+    "sass": "^1.90.0",
     "siwe": "^3.0.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",

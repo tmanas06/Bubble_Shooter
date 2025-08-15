@@ -21,6 +21,21 @@ export default {
   ],
   theme: {
   	extend: {
+		keyframes: {
+			float: {
+			  '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+			  '50%': { transform: 'translateY(-20px) rotate(5deg)' },
+			},
+			floatAlt: {
+			  '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+			  '50%': { transform: 'translateY(20px) rotate(-5deg)' },
+			}
+		  },
+		  animation: {
+			float: 'float 8s ease-in-out infinite',
+			'float-slow': 'float 6s ease-in-out infinite',
+			'float-alt': 'floatAlt 4s ease-in-out infinite',
+		  },
   		colors: {
   			// Main theme color - change this to update the entire app's color scheme
   			primary: "#8b5cf6", // Main brand color

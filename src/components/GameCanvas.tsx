@@ -42,11 +42,14 @@ export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
       console.log('Creating Phaser config...');
       const config: Phaser.Types.Core.GameConfig = {
         type: Phaser.AUTO,
-        width: 390,
-        height: 844,
+        width: window.innerWidth,
+        height: window.innerHeight,
         parent: ref.current,
         backgroundColor: '#000000',
-        physics: { default: 'arcade', arcade: { debug: false } },
+        physics: {
+          default: 'arcade',
+          arcade: { debug: false }
+        },
         scene: [scene]
       };
 
@@ -67,7 +70,7 @@ export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
   }, [chosenCreator, onGameOver]);
 
   return (
-    <div ref={ref} className="w-full h-full ">
+    <div ref={ref} className="w-[100vw] h-[100vh] ">
     </div>
   );
 }

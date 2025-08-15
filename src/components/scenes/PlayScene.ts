@@ -19,13 +19,14 @@ import { endGame } from './endGame';
 export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: number; lives: number; pops: number }) => void) {
   console.log('createPlayScene called with:', { chosenCreator });
   
-  class PlaySceneClass extends Phaser.Scene implements PlayScene {
+  class PlaySceneClass extends Phaser.Scene implements PlayScene{
     bg!: Phaser.GameObjects.Image;
     cannon!: Phaser.GameObjects.Image;
     crosshair!: Phaser.GameObjects.Image;
     bubbles!: Phaser.Physics.Arcade.Group;
     score = 0;
-    lives = 5;
+    timerText!: Phaser.GameObjects.Text;
+    timeLeft!: number;
     pops = 0;
     isShooting = true;
     lastTap = 0;
@@ -33,14 +34,12 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
     livesText!: Phaser.GameObjects.Text;
     onGameOver!: (p: { score: number; lives: number; pops: number }) => void;
 
-    // Methods
     getIntersectingBubble!: (x: number, y: number, radius: number) => any;
     popBubble!: (scene: PlayScene, b: any, increment: number) => void;
     cooldown!: (scene: PlayScene) => void;
     onBubbleMiss!: (scene: PlayScene) => void;
     onBubblePop!: (scene: PlayScene, bubble: Phaser.GameObjects.GameObject) => void;
     updateScore!: (scene: PlayScene) => void;
-    updateLives!: (scene: PlayScene) => void;
     endGame!: (scene: PlayScene, onGameOver: (p: { score: number; lives: number; pops: number }) => void) => void;
 
     constructor() {
@@ -57,7 +56,7 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
       console.log('PlaySceneClass create called');
       // Initialize state
       this.score = 0;
-      this.lives = 5;
+      this.timeLeft=60;
       this.pops = 0;
       this.isShooting = true;
       this.lastTap = 0;
@@ -66,7 +65,7 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
       addBackground(this);
       createUI(this);
       createGameElements(this);
-      createAbilities(this, chosenCreator, onGameOver);
+      // createAbilities(this, chosenCreator, onGameOver);
       createBubbles(this);
       setupInput(this, chosenCreator, onGameOver);
     }
@@ -84,7 +83,6 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
   scene.onBubbleMiss = onBubbleMiss;
   scene.onBubblePop = onBubblePop;
   scene.updateScore = updateScore;
-  scene.updateLives = updateLives;
   scene.endGame = endGame;
 
   console.log('Returning scene:', scene);
