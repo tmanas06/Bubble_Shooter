@@ -1,6 +1,6 @@
 import { PlayScene } from "@/lib/bubbleType";
 
-export function createAbilities(scene: PlayScene, chosenCreator: string, onGameOver: (p: { score: number; lives: number; pops: number }) => void) {
+export function createAbilities(scene: PlayScene, _chosenCreator: string, _onGameOver: (p: { score: number; lives: number; pops: number }) => void) {
   // Position ability buttons around the cannon like in the image
   // Left side buttons (stacked vertically)
   const ability1 = scene.add.image(scene.scale.width * 0.25, scene.scale.height * 0.85, 'ability1')

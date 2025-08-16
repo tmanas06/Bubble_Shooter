@@ -352,7 +352,7 @@ export function NeynarAuthButton() {
 
       setPollingInterval(interval);
     },
-    [fetchAllSigners, pollingInterval]
+    [fetchAllSigners, pollingInterval, message, signature]
   );
 
   // Cleanup polling on unmount

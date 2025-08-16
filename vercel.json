@@ -1,4 +1,23 @@
 {
   "buildCommand": "next build",
-  "framework": "nextjs"
-} 
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_NEYNAR_CLIENT_ID": "@neynar-client-id",
+    "NEXT_PUBLIC_NEYNAR_CLIENT_SECRET": "@neynar-client-secret",
+    "NEXT_PUBLIC_SITE_URL": "@site-url"
+  },
+  "public": true,
+  "regions": ["iad1"],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}

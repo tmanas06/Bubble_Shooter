@@ -4,7 +4,7 @@ import { preloadAssets } from './preloadAssets';
 import { addBackground } from './addBackground';
 import { createUI } from './createUI';
 import { createGameElements } from './createGameElements';
-import { createAbilities } from './createAbilities';
+import { createAbilities as _createAbilities } from './createAbilities';
 import { createBubbles } from './createBubbles';
 import { setupInput } from './setupInput';
 import { getIntersectingBubble } from './getIntersectingBubble';
@@ -13,7 +13,7 @@ import { cooldown } from './cooldown';
 import { onBubbleMiss } from './onBubbleMiss';
 import { onBubblePop } from './onBubblePop';
 import { updateScore } from './updateScore';
-import { updateLives } from './updateLives';
+import { updateLives as _updateLives } from './updateLives';
 import { endGame } from './endGame';
 
 export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: number; lives: number; pops: number }) => void, playerId: string = '1') {

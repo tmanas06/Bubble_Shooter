@@ -2,7 +2,7 @@ import { PlayScene } from "@/lib/bubbleType";
 
 export function addBackground(scene: PlayScene) {
   // Create underwater gradient background
-  const bg = scene.add.image(0, 0, 'underwater_bg')
+  const _bg = scene.add.image(0, 0, 'underwater_bg')
     .setOrigin(0, 0) // Top-left origin
     .setDisplaySize(scene.scale.width, scene.scale.height)
   

@@ -1,7 +1,34 @@
 import type { NextConfig } from "next";
 
+// List of allowed domains for images and API requests
+const allowedDomains = [
+  'loca.lt',
+  '*.loca.lt',
+  'i.imgur.com',
+  'res.cloudinary.com',
+  'pbs.twimg.com',
+  'abs.twimg.com',
+  'api.neynar.com',
+  '*.farcaster.xyz',
+  'farcaster.xyz',
+];
+
 const nextConfig: NextConfig = {
-  // Enable CORS for development
+  // Enable React Strict Mode
+  reactStrictMode: true,
+  
+  // Configure images
+  images: {
+    domains: allowedDomains,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
+  
+  // Enable CORS for development and production
   async headers() {
     return [
       {
@@ -17,27 +44,54 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
+            value: 'Content-Type, Authorization, x-neynar-version',
           },
         ],
       },
     ];
   },
+  
   // Enable experimental features
   experimental: {
     serverActions: {
-      // Allow server actions from localhost and localtunnel
-      allowedOrigins: ['localhost:3000', '*.loca.lt']
-    }
+      // Allow server actions from all origins for Farcaster
+      allowedOrigins: ['*']
+    },
+    // Enable server components
+    serverComponentsExternalPackages: ['@neynar/nodejs-sdk', 'pino'],
   },
   
   // Configure server external packages
-  serverExternalPackages: ['pino'],
+  serverExternalPackages: ['pino', '@neynar/nodejs-sdk'],
   
-  // Configure image domains
-  images: {
-    domains: ['loca.lt', '*.loca.lt'],
+  // Environment variables that should be available to the client
+  env: {
+    NEXT_PUBLIC_NEYNAR_CLIENT_ID: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID,
+    NEXT_PUBLIC_NEYNAR_CLIENT_SECRET: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_SECRET,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://your-vercel-url.vercel.app',
   },
+  
+  // Enable output file tracing for better performance
+  output: 'standalone',
+  
+  // Configure webpack
+  webpack: (config, { isServer }) => {
+    // Important: return the modified config
+    if (!isServer) {
+      // Don't include certain packages in the client bundle
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        child_process: false,
+      };
+    }
+    return config;
+  },
+  
+  // Enable rewrites for Farcaster frame endpoints
   async rewrites() {
     return [
       {
