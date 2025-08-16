@@ -6,9 +6,10 @@ import * as Phaser from 'phaser';
 type Props = {
   chosenCreator: string;
   onGameOver: (p: { score: number; lives: number; pops: number }) => void;
+  playerId?: string;
 };
 
-export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
+export default function GameCanvas({ chosenCreator, onGameOver, playerId = '1' }: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
@@ -19,7 +20,7 @@ export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
     const container = ref.current;
     const { clientWidth, clientHeight } = container;
 
-    const scene = createPlayScene(chosenCreator, onGameOver);
+    const scene = createPlayScene(chosenCreator, onGameOver, playerId);
     if (!scene) return;
 
     const config: Phaser.Types.Core.GameConfig = {
@@ -60,7 +61,7 @@ export default function GameCanvas({ chosenCreator, onGameOver }: Props) {
         gameRef.current = null;
       }
     };
-  }, [chosenCreator, onGameOver]);
+  }, [chosenCreator, onGameOver, playerId]);
 
   return (
     <div className="w-full h-full">

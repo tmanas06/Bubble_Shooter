@@ -118,7 +118,7 @@ export default function ModeSelection() {
             <div className="w-full max-w-xs space-y-6">
               {/* Player Button */}
               <button 
-                onClick={() => router.push('/game')}
+                onClick={() => router.push('/game/player-selection')}
                 className="w-full bg-white/20 backdrop-blur-md rounded-2xl p-6 border-2 border-white/30 hover:bg-white/30 transition-all duration-300 transform hover:scale-105 flex flex-col items-center"
               >
                 <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4">

@@ -48,7 +48,6 @@ export interface UserSelection {
   selected: boolean;
 }
 
-
 export interface PlayScene extends Phaser.Scene {
   bg: Phaser.GameObjects.Image;
   cannon: Phaser.GameObjects.Image;
@@ -62,10 +61,11 @@ export interface PlayScene extends Phaser.Scene {
   lastTap: number;
   scoreText: Phaser.GameObjects.Text;
   livesText: Phaser.GameObjects.Text;
+  playerId: string;
   onGameOver: (p: { score: number; lives: number; pops: number }) => void;
   // Methods (added as properties on the scene object)
   getIntersectingBubble: (x: number, y: number, radius: number) => any;
-  popBubble: (scene: PlayScene; b: any, increment: number) => void;
+  popBubble: (scene: PlayScene, b: any, increment: number) => void;
   cooldown: (scene: PlayScene) => void;
   onBubbleMiss: (scene: PlayScene) => void;
   onBubblePop: (scene: PlayScene, bubble: Phaser.GameObjects.GameObject) => void;

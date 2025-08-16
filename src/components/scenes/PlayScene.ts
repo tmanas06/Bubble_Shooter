@@ -16,10 +16,11 @@ import { updateScore } from './updateScore';
 import { updateLives } from './updateLives';
 import { endGame } from './endGame';
 
-export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: number; lives: number; pops: number }) => void) {
+export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: number; lives: number; pops: number }) => void, playerId: string = '1') {
   console.log('createPlayScene called with:', { chosenCreator });
   
-  class PlaySceneClass extends Phaser.Scene implements PlayScene{
+  class PlaySceneClass extends Phaser.Scene implements PlayScene {
+    playerId: string;
     bg!: Phaser.GameObjects.Image;
     cannon!: Phaser.GameObjects.Image;
     crosshair!: Phaser.GameObjects.Image;
@@ -46,6 +47,7 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
     constructor() {
       super({ key: 'Play' });
       console.log('PlaySceneClass constructor called');
+      this.playerId = '1'; // Default value
     }
 
     preload() {
@@ -63,6 +65,9 @@ export function createPlayScene(chosenCreator: string, onGameOver: (p: { score: 
       this.lastTap = 0;
       this.onGameOver = onGameOver;
       this.specialBubbleAdded = false;
+      
+      // Store player ID for reference
+      this.playerId = playerId;
 
       // Add debug graphics
       const graphics = this.add.graphics();

@@ -1,24 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, ComponentType } from 'react';
 import Link from 'next/link';
 
 // Import components with dynamic loading
-const HamburgerMenu = (props: any) => {
-  const Component = require('@/components/HamburgerMenu').default;
-  return <Component {...props} />;
-};
-
-const GameCanvas = (props: {
-  chosenCreator: string;
-  onGameOver: (params: { score: number; lives: number; pops: number }) => void;
-  playerId?: string;
-}) => {
-  const Component = require('@/components/GameCanvas').default;
-  return <Component {...props} />;
-};
-
+const HamburgerMenu = (await import('@/components/HamburgerMenu')).default;
+const GameCanvas = (await import('@/components/GameCanvas')).default;
 
 interface GameOverParams {
   score: number;
@@ -29,19 +17,22 @@ interface GameOverParams {
 // Disable SSR for this page to avoid Next.js auth issues
 export const dynamic = 'force-dynamic';
 
-export default function GamePage() {
+export default function GamePlayPage() {
   const router = useRouter();
   const [creator, setCreator] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [gameOver, setGameOver] = useState<GameOverParams | null>(null);
   const [showScore, setShowScore] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [player, setPlayer] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
     if (typeof window !== 'undefined') {
       const c = localStorage.getItem('chosenCreator') || 'default';
+      const p = localStorage.getItem('selectedPlayer') || '1';
       setCreator(c);
+      setPlayer(p);
       setIsLoading(false);
     } else {
       setIsLoading(false);
@@ -58,7 +49,9 @@ export default function GamePage() {
 
   const handlePlayAgain = useCallback(() => {
     setShowScore(false);
-    setGameOver(null);
+    setGameOver(null);  
+    // Reload the game with the same player
+    window.location.reload();
   }, []);
 
   if (!isClient || isLoading) {
@@ -79,22 +72,18 @@ export default function GamePage() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* Hamburger Menu */}
       <HamburgerMenu />
-      {/* Outer fixed-size game container */}
       <div
         className="relative w-full max-w-4xl h-[80vh] max-h-[90vh] bg-white/90 rounded-2xl overflow-hidden flex items-center justify-center"
         style={{
           margin: '0 auto',
         }}
       >
-        {/* Background with white overlay */}
         <div className="absolute inset-0 w-full h-full bg-white/90"></div>
 
-        {/* Game fill area */}
-        {creator && (
+        {creator && player && (
           <div className="relative w-full h-full">
-<div style={{
+            <div style={{
               width: '100%',
               height: '100%',
               display: 'block',
@@ -104,12 +93,12 @@ export default function GamePage() {
               <GameCanvas
                 chosenCreator={creator}
                 onGameOver={onGameOver}
+                playerId={player}
               />
             </div>
           </div>
         )}
 
-        {/* Game Over Overlay */}
         {showScore && gameOver && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="bg-gradient-to-b from-[#35A5F7] to-[#152E92] rounded-3xl p-8 max-w-md w-full mx-4 relative overflow-hidden">
@@ -140,10 +129,10 @@ export default function GamePage() {
                     Play Again
                   </button>
                   <Link
-                    href="/"
+                    href="/game/select"
                     className="block w-full py-3 bg-transparent hover:bg-white/10 text-white font-bold border border-white/30 rounded-xl transition-colors text-center"
                   >
-                    Back to Home
+                    Back to Modes
                   </Link>
                 </div>
               </div>
