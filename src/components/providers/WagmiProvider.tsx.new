@@ -1,0 +1,70 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createConfig, http, WagmiProvider as WagmiCoreProvider } from 'wagmi';
+import { mainnet, base } from 'wagmi/chains';
+import { useMiniApp } from '@neynar/react';
+
+// Query client for wagmi
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 min
+    },
+  },
+});
+
+// Wagmi config with only the chains we need
+const config = createConfig({
+  chains: [mainnet, base],
+  transports: {
+    [mainnet.id]: http(),
+    [base.id]: http(),
+  },
+  ssr: false, // Disable server-side rendering for wallet connections
+});
+
+// Custom hook to handle Farcaster wallet connection
+function useFarcasterWallet() {
+  const { context } = useMiniApp();
+  
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && context?.user?.fid) {
+      console.log('[Farcaster] User FID:', context.user.fid);
+    }
+  }, [context?.user?.fid]);
+  
+  return {
+    isConnected: !!context?.user?.fid,
+    fid: context?.user?.fid,
+    farcasterUser: context?.user,
+  };
+}
+
+export function WagmiProvider({ children }: { children: React.ReactNode }) {
+  const { isConnected } = useFarcasterWallet();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Farcaster] Wallet connection status:', isConnected ? 'Connected' : 'Disconnected');
+  }
+
+  return (
+    <WagmiCoreProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </WagmiCoreProvider>
+  );
+}
