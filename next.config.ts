@@ -75,7 +75,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   
   // Configure webpack
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // Important: return the modified config
     if (!isServer) {
       // Don't include certain packages in the client bundle
@@ -87,7 +87,36 @@ const nextConfig: NextConfig = {
         dns: false,
         child_process: false,
       };
+
+      // Increase chunk loading timeout
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        maxInitialRequests: 25,
+        minSize: 20000,
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name(module: { context: string }) {
+              const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
+              if (!match) return 'npm.unknown';
+              return `npm.${match[1].replace('@', '')}`;
+            },
+          },
+        },
+      };
+
+      // Disable timeout for chunk loading
+      config.output.chunkLoadTimeout = 300000; // 5 minutes
     }
+
+    // In development, show more detailed error messages
+    if (dev) {
+      config.optimization.minimize = false;
+      config.optimization.removeAvailableModules = false;
+      config.optimization.removeEmptyChunks = false;
+      config.optimization.splitChunks = false;
+    }
+
     return config;
   },
   

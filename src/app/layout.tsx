@@ -4,6 +4,7 @@ import '~/app/globals.css';
 import { APP_NAME, APP_DESCRIPTION } from '~/lib/constants';
 import { Providers } from './providers';
 import FontAwesomeProvider from './font-awesome-provider';
+import { WalletDebugWrapper } from '~/components/debug/WalletDebugWrapper';
 
 export const metadata: Metadata = {
   title: APP_NAME,
@@ -25,6 +26,7 @@ export default async function RootLayout({
           <Providers session={session}>
             <FontAwesomeProvider>
               {children}
+              <WalletDebugWrapper />
             </FontAwesomeProvider>
           </Providers>
         </div>

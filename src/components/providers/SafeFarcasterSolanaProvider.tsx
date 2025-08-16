@@ -3,8 +3,25 @@ import dynamic from "next/dynamic";
 import { sdk } from '@farcaster/miniapp-sdk';
 
 const FarcasterSolanaProvider = dynamic(
-  () => import('@farcaster/mini-app-solana').then(mod => mod.FarcasterSolanaProvider),
-  { ssr: false }
+  () => import('@farcaster/mini-app-solana')
+    .then(mod => {
+      console.log('FarcasterSolanaProvider module loaded:', mod);
+      if (!mod.FarcasterSolanaProvider) {
+        throw new Error('FarcasterSolanaProvider export not found in @farcaster/mini-app-solana');
+      }
+      return mod.FarcasterSolanaProvider;
+    })
+    .catch(error => {
+      console.error('Error loading FarcasterSolanaProvider:', error);
+      throw error;
+    }),
+  { 
+    ssr: false,
+    loading: () => {
+      console.log('Loading FarcasterSolanaProvider...');
+      return null;
+    }
+  }
 );
 
 type SafeFarcasterSolanaProviderProps = {
@@ -21,24 +38,32 @@ export function SafeFarcasterSolanaProvider({ endpoint, children }: SafeFarcaste
 
   useEffect(() => {
     if (!isClient) return;
+    // NOTE: If you ever need to access window.parent or window.opener for provider detection,
+    // always use try/catch and check for cross-origin SecurityError.
     let cancelled = false;
+    console.log('Checking for Solana provider...');
     (async () => {
       try {
+        console.log('Calling sdk.wallet.getSolanaProvider()...');
         const provider = await sdk.wallet.getSolanaProvider();
+        console.log('Got Solana provider:', provider ? 'available' : 'not available');
         if (!cancelled) {
           setHasSolanaProvider(!!provider);
         }
-      } catch {
+      } catch (error) {
+        console.error('Error getting Solana provider:', error);
         if (!cancelled) {
           setHasSolanaProvider(false);
         }
       } finally {
         if (!cancelled) {
+          console.log('Provider check complete');
           setChecked(true);
         }
       }
     })();
     return () => {
+      console.log('Cleaning up Solana provider check');
       cancelled = true;
     };
   }, [isClient]);
@@ -64,7 +89,12 @@ export function SafeFarcasterSolanaProvider({ endpoint, children }: SafeFarcaste
     };
   }, []);
 
-  if (!isClient || !checked) {
+  if (!isClient) {
+    console.log('Not rendering FarcasterSolanaProvider: not in browser');
+    return null;
+  }
+  if (!checked) {
+    console.log('Not rendering FarcasterSolanaProvider: provider check not complete');
     return null;
   }
 
