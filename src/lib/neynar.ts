@@ -6,13 +6,13 @@ import { NeynarAPIClient, Configuration } from '@neynar/nodejs-sdk';
 let neynarClient: NeynarAPIClient | null = null;
 
 // Server-side only function to get Neynar client
-export function getNeynarClient() {
+export async function getNeynarClient() {
   if (typeof window !== 'undefined') {
     throw new Error('Neynar client can only be used server-side');
   }
   
   if (!neynarClient) {
-    const apiKey = process.env.NEYNAR_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_NEYNAR_API_KEY || process.env.NEYNAR_API_KEY;
     if (!apiKey) {
       throw new Error('NEYNAR_API_KEY environment variable is not set');
     }
@@ -32,10 +32,10 @@ export interface NeynarUser {
 }
 
 export async function getNeynarUser(fid: number): Promise<NeynarUser | null> {
-  const client = getNeynarClient();
   try {
-    const result = await client.fetchBulkUsers({ fids: [fid] });
-    const user = result.users[0];
+    const client = await getNeynarClient();
+    const response = await client.fetchBulkUsers({ fids: [fid] });
+    const user = response.users[0];
     if (!user) return null;
     
     return {
@@ -66,10 +66,10 @@ export async function sendNeynarMiniAppNotification({
   title: string;
   body: string;
 }): Promise<SendMiniAppNotificationResult> {
-  const client = getNeynarClient();
   try {
-    const result = await client.fetchBulkUsers({ fids: [fid] });
-    const user = result.users[0];
+    const client = await getNeynarClient();
+    const response = await client.fetchBulkUsers({ fids: [fid] });
+    const user = response.users[0];
     if (!user?.verified_addresses?.eth_addresses?.[0]) {
       return { state: 'no_token' };
     }
@@ -94,7 +94,17 @@ export async function sendNeynarMiniAppNotification({
   }
 }
 
-export async function publishCast(signerUuid: string, text: string) {
-  const client = getNeynarClient();
-  return client.publishCast({ signerUuid, text });
+export async function publishCast(text: string, signerUuid: string, parentUrl?: string) {
+  try {
+    const client = await getNeynarClient();
+    const response = await client.publishCast({
+      signerUuid,
+      text,
+      parent: parentUrl
+    });
+    return response;
+  } catch (error) {
+    console.error('Error publishing cast:', error);
+    throw error;
+  }
 }

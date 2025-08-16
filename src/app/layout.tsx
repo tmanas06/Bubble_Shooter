@@ -3,6 +3,7 @@ import { getSession } from '~/auth';
 import '~/app/globals.css';
 import { APP_NAME, APP_DESCRIPTION } from '~/lib/constants';
 import { Providers } from './providers';
+import FontAwesomeProvider from './font-awesome-provider';
 
 export const metadata: Metadata = {
   title: APP_NAME,
@@ -22,7 +23,9 @@ export default async function RootLayout({
         <ClientBackground />
         <div className="relative z-10">
           <Providers session={session}>
-            {children}
+            <FontAwesomeProvider>
+              {children}
+            </FontAwesomeProvider>
           </Providers>
         </div>
       </body>

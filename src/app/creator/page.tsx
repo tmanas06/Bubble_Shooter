@@ -2,132 +2,97 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useNeynarUser } from '@/hooks/useNeynarUser';
+import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faArrowLeft, 
+  faCirclePlus, 
+  faHome, 
+  faGamepad, 
+  faTrophy,
+  faUser 
+} from '@fortawesome/free-solid-svg-icons';
+import { faXTwitter } from '@fortawesome/free-brands-svg-icons';
 
 export default function CreatorPage() {
   const router = useRouter();
   const { user } = useNeynarUser();
-  const [tokenAddress, setTokenAddress] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close menu when clicking outside
+  // Close menu on outside click (unchanged)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
     }
-    
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    
-    if (!tokenAddress) {
-      setError('Please enter a valid token address');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      
-      const response = await fetch('/api/creator', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          creatorAddress: user?.fid.toString(),
-          tokenAddress: tokenAddress.trim()
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
-      }
-
-      // Redirect to Zora with the token address
-      window.location.href = data.redirectUrl;
-      
-    } catch (err) {
-      console.error('Error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to process your request');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* Hamburger Menu */}
-      <div className="absolute top-6 right-6 z-[100]" ref={menuRef}>
-        <button 
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="p-2 rounded-full hover:bg-white/20 transition-colors"
-          aria-label="Menu"
-          style={{
-            backgroundColor: menuOpen ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
-          }}
-        >
-          <div className="w-6 h-6 flex flex-col items-center justify-center">
-            <div 
-              className={`w-5 h-0.5 bg-white rounded-full transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1.5'}`}
-            ></div>
-            <div 
-              className={`w-5 h-0.5 bg-white rounded-full transition-all duration-300 ${menuOpen ? 'opacity-0' : 'opacity-100 mb-1.5'}`}
-            ></div>
-            <div 
-              className={`w-5 h-0.5 bg-white rounded-full transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}
-            ></div>
-          </div>
-        </button>
-        
-        {/* Dropdown Menu */}
-        {menuOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 transform transition-all duration-200 origin-top-right">
-            <Link 
-              href="/profile" 
-              className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors border-b border-gray-100"
-              onClick={() => setMenuOpen(false)}
-            >
-              👤 Profile
-            </Link>
-            <Link 
-              href="/leaderboard" 
-              className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              🏆 Leaderboard
-            </Link>
-          </div>
-        )}
-      </div>
-
       {/* Main container with exact dimensions */}
       <div className="absolute w-[419px] h-[892px] left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(94.6%_54.54%_at_50%_50%,#35A5F7_0%,#152E92_100%)]">
-          {/* Large background bubbles */}
-          <div className="absolute w-[406px] h-[406px] left-[-224px] top-[-159px] bg-gradient-to-b from-[#226ED8] to-[rgba(35,136,242,0)] opacity-70 rounded-full blur-[2.9px]"></div>
+          {/* White panel */}
+          <div className="absolute inset-4 rounded-3xl p-6 overflow-hidden">
+            {/* Header */}
+            <div className="relative z-20 pt-2 px-2">
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-bold text-gray-800">Creator Dashboard</h1>
+                
+                {/* Hamburger Menu */}
+                <div className="relative" ref={menuRef}>
+                  <button 
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+                    aria-label="Menu"
+                    style={{
+                      backgroundColor: menuOpen ? 'rgba(0, 0, 0, 0.1)' : 'transparent'
+                    }}
+                  >
+                    <div className="w-6 h-6 flex flex-col items-center justify-center">
+                      <div className={`w-5 h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-1.5' : 'mb-1.5'}`}></div>
+                      <div className={`w-5 h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${menuOpen ? 'opacity-0' : 'opacity-100 mb-1.5'}`}></div>
+                      <div className={`w-5 h-0.5 bg-gray-800 rounded-full transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+                    </div>
+                  </button>
+                  
+                  {/* Dropdown Menu */}
+                  {menuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-lg shadow-xl overflow-hidden border border-white/10 transform transition-all duration-200 origin-top-right">
+                      <div 
+                        className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors border-b border-gray-100 cursor-pointer"
+                        onClick={() => {
+                          router.push('/creator/profile');
+                          setMenuOpen(false);
+                        }}
+                      >
+                        👤 Creator Profile
+                      </div>
+                      <div 
+                        className="block px-4 py-3 text-sm font-medium text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          router.push('/creator/leaderboard');
+                          setMenuOpen(false);
+                        }}
+                      >
+                        📊 Creator Stats
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
           
-          {/* Top right bubble */}
-          <div className="absolute w-[100px] h-[100px] left-[334px] top-[119px] bg-gradient-to-b from-[rgba(44,155,244,0.28)] to-[rgba(48,158,245,0.098)] backdrop-blur-[13.1px] rounded-full"></div>
-          
-          {/* Bottom left bubble */}
-          <div className="absolute w-[100px] h-[100px] left-[-21px] top-[580px] bg-gradient-to-b from-[rgba(44,155,244,0.28)] to-[rgba(48,158,245,0.098)] backdrop-blur-[13.1px] rounded-full"></div>
-          
-          {/* Bubble cluster */}
+          {/* Bubble effects */}
           <div className="absolute inset-0 overflow-hidden">
             {/* Row 1 */}
             <div className="absolute w-[123px] h-[123px] left-[48px] top-[281px] bg-gradient-to-b from-[rgba(53,172,254,0.82)] to-[rgba(52,177,252,0.82)] rounded-full blur-[3.65px]"></div>
@@ -137,81 +102,103 @@ export default function CreatorPage() {
             {/* Row 2 */}
             <div className="absolute w-[123px] h-[123px] left-[5px] top-[351px] bg-gradient-to-b from-[rgba(53,172,254,0.82)] to-[rgba(52,177,252,0.82)] rounded-full blur-[3.65px]"></div>
             <div className="absolute w-[123px] h-[123px] left-[90px] top-[374px] bg-gradient-to-b from-[#35ACFE] to-[#34B1FC] rounded-full blur-[3.65px]"></div>
-            
-            {/* Row 3 */}
-            <div className="absolute w-[123px] h-[123px] left-[97px] top-[412px] bg-gradient-to-b from-[rgba(53,172,254,0.82)] to-[rgba(52,177,252,0.82)] rounded-full blur-[3.65px]"></div>
-            <div className="absolute w-[123px] h-[123px] left-[171px] top-[425px] bg-gradient-to-b from-[#35ACFE] to-[#34B1FC] rounded-full blur-[3.65px]"></div>
-            <div className="absolute w-[123px] h-[123px] left-[261px] top-[404px] bg-gradient-to-b from-[#35ACFE] to-[#34B1FC] rounded-full blur-[3.65px]"></div>
-            
-            {/* Bottom row */}
-            <div className="absolute w-[123px] h-[123px] left-[17px] top-[404px] bg-gradient-to-b from-[rgba(53,172,254,0.82)] to-[rgba(52,177,252,0.82)] rounded-full blur-[3.65px]"></div>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="relative z-10 h-full flex flex-col items-center justify-center px-8">
-            <div className="w-full max-w-xs">
-              <h1 className="text-4xl font-bold text-white mb-12 text-center">Creator Portal</h1>
-              
-              <div className="w-full bg-white/10 backdrop-blur-md rounded-2xl p-6 border-2 border-white/20">
-                <p className="text-blue-100 text-center mb-6">Connect your Zora collection to start earning</p>
-                
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label htmlFor="tokenAddress" className="block text-sm font-medium text-blue-100 mb-2">
-                      Your Zora Collection Address
-                    </label>
-                    <input
-                      type="text"
-                      id="tokenAddress"
-                      value={tokenAddress}
-                      onChange={(e) => setTokenAddress(e.target.value)}
-                      placeholder="0x..."
-                      className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                      disabled={isLoading}
-                    />
-                    {error && <p className="mt-2 text-sm text-red-300">{error}</p>}
+        {/* Main content */}
+        <div className="relative z-10 flex flex-col w-full h-full">
+          {/* Main content area */}
+          <div className="flex-1 flex flex-col items-center justify-center px-7 relative z-10">
+            {/* Back button */}
+            <div className="w-full flex items-center justify-start mb-4">
+              <button
+                className="text-white text-xl p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
+                onClick={() => router.back()}
+                aria-label="Back"
+              >
+                <FontAwesomeIcon icon={faArrowLeft} className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Creator content */}
+            <div className="w-full max-w-xs bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/10">
+              {/* Avatar + Plus */}
+              <div className="flex items-center justify-center -mt-12 mb-4">
+                <div className="bg-gradient-to-br from-[#35ACFE] to-[#34B1FC] p-1 rounded-full">
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <FontAwesomeIcon icon={faCirclePlus} className="text-white text-4xl" />
                   </div>
-                  
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full py-3 px-4 rounded-xl font-bold text-white transition-colors ${
-                      isLoading
-                        ? 'bg-blue-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                    }`}
-                  >
-                    {isLoading ? 'Processing...' : 'Connect with Zora'}
-                  </button>
-                </form>
-                
-                <div className="mt-8 pt-6 border-t border-white/10">
-                  <h3 className="text-sm font-medium text-blue-100 mb-3">How it works:</h3>
-                  <ol className="space-y-3 text-sm text-blue-100">
-                    <li className="flex items-start">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold mr-2 flex-shrink-0">1</span>
-                      <span>Connect your Zora collection address above</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold mr-2 flex-shrink-0">2</span>
-                      <span>You'll be redirected to Zora to complete the connection</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-bold mr-2 flex-shrink-0">3</span>
-                      <span>Start earning rewards when players use your collection in-game</span>
-                    </li>
-                  </ol>
                 </div>
               </div>
               
-              <button
-                onClick={() => router.back()}
-                className="mt-8 text-blue-200 hover:text-white transition-colors flex items-center text-sm mx-auto"
+              {/* Heading & subheading */}
+              <div className="mb-6 text-center">
+                <h1 className="text-white text-2xl font-bold mb-2">Link your Socials</h1>
+                <p className="text-blue-100 text-sm">
+                  Adding your social accounts makes it easier to get discovered
+                </p>
+              </div>
+
+              {/* Social cards GRID */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {/* Zora Card */}
+                <button className="bg-white/10 hover:bg-white/20 transition-all duration-300 flex flex-col items-center py-4 px-2 rounded-xl shadow-lg border border-white/5 hover:border-white/20">
+                  <div className="mb-2 w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                    <Image
+                      src="/assets/zora.png"
+                      alt="Zora"
+                      width={32}
+                      height={32}
+                      className="rounded-full"
+                    />
+                  </div>
+                  <span className="text-white text-sm font-medium">Add Zora</span>
+                </button>
+                
+                {/* X Card */}
+                <div className="bg-white/10 backdrop-blur-sm flex flex-col items-center py-4 px-2 rounded-xl shadow-lg border border-white/5">
+                  <div className="mb-2 w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                    <FontAwesomeIcon icon={faXTwitter} className="text-black text-2xl" />
+                  </div>
+                  <span className="text-white font-medium text-sm">@bubblebanger</span>
+                  <button className="mt-1 text-xs text-blue-200 hover:text-red-400 transition-colors">
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* BOTTOM NAVIGATION *** */}
+          <div className="pb-4 px-4">
+            <div className="w-full flex justify-around items-center px-8 py-3 bg-white/10 rounded-full shadow-2xl backdrop-blur-lg">
+              <button 
+                className="flex flex-col items-center text-blue-200 hover:text-white transition-colors"
+                onClick={() => router.push('/creator')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                </svg>
-                Back to Mode Selection
+                <FontAwesomeIcon icon={faHome} className="h-6 w-6 mb-1" />
+                <span className="text-xs">Home</span>
+              </button>
+              <button 
+                className="flex flex-col items-center text-blue-200 hover:text-white transition-colors"
+                onClick={() => router.push('/creator/game')}
+              >
+                <FontAwesomeIcon icon={faGamepad} className="h-6 w-6 mb-1" />
+                <span className="text-xs">Game</span>
+              </button>
+              <button 
+                className="flex flex-col items-center text-blue-200 hover:text-white transition-colors"
+                onClick={() => router.push('/creator/leaderboard')}
+              >
+                <FontAwesomeIcon icon={faTrophy} className="h-6 w-6 mb-1" />
+                <span className="text-xs">Stats</span>
+              </button>
+              <button 
+                className="flex flex-col items-center text-blue-200 hover:text-white transition-colors"
+                onClick={() => router.push('/creator/profile')}
+              >
+                <FontAwesomeIcon icon={faUser} className="h-6 w-6 mb-1" />
+                <span className="text-xs">Profile</span>
               </button>
             </div>
           </div>
